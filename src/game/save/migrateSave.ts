@@ -11,5 +11,12 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     return null;
   }
 
-  return input;
+  return {
+    ...input,
+    autoBattle: {
+      ...input.autoBattle,
+      enabled: true,
+      defeatedCount: input.autoBattle.defeatedCount ?? 0
+    }
+  };
 }
