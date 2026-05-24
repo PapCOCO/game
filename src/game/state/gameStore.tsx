@@ -21,6 +21,8 @@ import {
   unequipItem as unequipCoreItem
 } from "../core/equipment";
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
+import { calculateOfflineReward } from "../core/offlineReward";
+import type { OfflineRewardSummary } from "../types";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
 
@@ -29,6 +31,7 @@ interface GameStoreState {
   status: GameStoreStatus;
   errorMessage?: string;
   noticeMessage?: string;
+  offlineReward: OfflineRewardSummary | null;
 }
 
 interface GameStoreValue extends GameStoreState {
@@ -43,6 +46,7 @@ interface GameStoreValue extends GameStoreState {
   unequipSlotNow: (slot: EquipmentSlot) => Promise<void>;
   discardEquipment: (instanceId: string) => Promise<void>;
   clearError: () => void;
+  dismissOfflineReward: () => void;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
@@ -76,7 +80,8 @@ function appendSystemLog(save: GameSaveData, message: string, now: number): Game
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GameStoreState>({
     save: null,
-    status: "loading"
+    status: "loading",
+    offlineReward: null
   });
   const stateRef = useRef(state);
 
@@ -88,22 +93,51 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState((current) => ({
       save: current.save,
       status: "loading",
-      noticeMessage: current.noticeMessage
+      noticeMessage: current.noticeMessage,
+      offlineReward: null
     }));
 
     try {
       const loadedSave = await loadGameSave();
 
-      setState({
-        save: loadedSave,
-        status: loadedSave === null ? "no-save" : "ready",
-        noticeMessage: loadedSave === null ? undefined : "已读取本地存档。"
-      });
+      if (loadedSave === null) {
+        setState({
+          save: null,
+          status: "no-save",
+          offlineReward: null
+        });
+        return;
+      }
+
+      const now = Date.now();
+      const offlineMs = now - loadedSave.runtime.time.lastActiveAt;
+      const hasOfflineReward =
+        loadedSave.settings.offlineRewardEnabled && offlineMs > 60000;
+
+      if (hasOfflineReward) {
+        const result = calculateOfflineReward(loadedSave, now);
+        await saveGameSave(result.save);
+
+        setState({
+          save: result.save,
+          status: "ready",
+          noticeMessage: "已读取本地存档，离线收益已结算。",
+          offlineReward: result.summary
+        });
+      } else {
+        setState({
+          save: loadedSave,
+          status: "ready",
+          noticeMessage: "已读取本地存档。",
+          offlineReward: null
+        });
+      }
     } catch (error) {
       setState({
         save: null,
         status: "error",
-        errorMessage: error instanceof Error ? error.message : "读取存档失败"
+        errorMessage: error instanceof Error ? error.message : "读取存档失败",
+        offlineReward: null
       });
     }
   }, []);
@@ -117,13 +151,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save,
         status: "ready",
-        noticeMessage: "角色创建完成。"
+        noticeMessage: "角色创建完成。",
+        offlineReward: null
       });
     } catch (error) {
       setState({
         save: null,
         status: "error",
-        errorMessage: error instanceof Error ? error.message : "创建角色失败"
+        errorMessage: error instanceof Error ? error.message : "创建角色失败",
+        offlineReward: null
       });
     }
   }, []);
@@ -135,7 +171,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: null,
         status: "error",
-        errorMessage: "当前没有可保存的存档"
+        errorMessage: "当前没有可保存的存档",
+        offlineReward: null
       });
       return;
     }
@@ -152,7 +189,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState((current) => ({
         save: current.save,
         status: "error",
-        errorMessage: error instanceof Error ? error.message : "保存失败"
+        errorMessage: error instanceof Error ? error.message : "保存失败",
+        offlineReward: current.offlineReward
       }));
     }
   }, []);
@@ -194,7 +232,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState({
       save: result.save,
       status: "ready",
-      noticeMessage: result.message
+      noticeMessage: result.message,
+      offlineReward: null
     });
 
     try {
@@ -204,7 +243,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         save: result.save,
         status: "error",
         errorMessage: error instanceof Error ? error.message : "突破后保存失败",
-        noticeMessage: result.message
+        noticeMessage: result.message,
+        offlineReward: null
       });
     }
   }, [state]);
@@ -267,7 +307,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: changedSave,
         status: "ready",
-        noticeMessage: `已前往${targetMap.name}。`
+        noticeMessage: `已前往${targetMap.name}。`,
+        offlineReward: null
       });
 
       try {
@@ -277,7 +318,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           save: changedSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "切换地图后保存失败",
-          noticeMessage: `已前往${targetMap.name}。`
+          noticeMessage: `已前往${targetMap.name}。`,
+          offlineReward: null
         });
       }
     },
@@ -320,7 +362,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState({
       save: nextSave,
       status: "ready",
-      noticeMessage: message
+      noticeMessage: message,
+      offlineReward: null
     });
 
     try {
@@ -330,7 +373,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         save: nextSave,
         status: "error",
         errorMessage: error instanceof Error ? error.message : "切换自动历练状态后保存失败",
-        noticeMessage: message
+        noticeMessage: message,
+        offlineReward: null
       });
     }
   }, [state]);
@@ -354,7 +398,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: nextSave,
         status: "ready",
-        noticeMessage: "装备已穿戴。"
+        noticeMessage: "装备已穿戴。",
+        offlineReward: null
       });
 
       try {
@@ -364,7 +409,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "穿戴装备后保存失败",
-          noticeMessage: "装备已穿戴。"
+          noticeMessage: "装备已穿戴。",
+          offlineReward: null
         });
       }
     },
@@ -382,7 +428,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: nextSave,
         status: "ready",
-        noticeMessage: "装备已卸下。"
+        noticeMessage: "装备已卸下。",
+        offlineReward: null
       });
 
       try {
@@ -392,7 +439,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "卸下装备后保存失败",
-          noticeMessage: "装备已卸下。"
+          noticeMessage: "装备已卸下。",
+          offlineReward: null
         });
       }
     },
@@ -457,7 +505,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: nextSave,
         status: "ready",
-        noticeMessage: `已丢弃${equipment.name}。`
+        noticeMessage: `已丢弃${equipment.name}。`,
+        offlineReward: null
       });
 
       try {
@@ -467,7 +516,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "丢弃装备后保存失败",
-          noticeMessage: `已丢弃${equipment.name}。`
+          noticeMessage: `已丢弃${equipment.name}。`,
+          offlineReward: null
         });
       }
     },
@@ -478,7 +528,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
     setState((current) => ({
       save: current.save,
       status: current.save === null ? "no-save" : "ready",
-      noticeMessage: current.noticeMessage
+      noticeMessage: current.noticeMessage,
+      offlineReward: current.offlineReward
+    }));
+  }, []);
+
+  const dismissOfflineReward = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      offlineReward: null
     }));
   }, []);
 
@@ -495,7 +553,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       equipItemNow,
       unequipSlotNow,
       discardEquipment,
-      clearError
+      clearError,
+      dismissOfflineReward
     }),
     [
       breakthroughNow,
@@ -503,6 +562,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       clearError,
       createCharacter,
       discardEquipment,
+      dismissOfflineReward,
       equipItemNow,
       loadSave,
       saveNow,

@@ -2,9 +2,10 @@ import { useEffect } from "react";
 import { GameProvider, useGameStore } from "./game/state/gameStore";
 import { CreateCharacterScreen } from "./ui/screens/CreateCharacterScreen";
 import { GameScreen } from "./ui/screens/GameScreen";
+import { OfflineRewardModal } from "./ui/components/OfflineRewardModal";
 
 function AppContent() {
-  const { errorMessage, loadSave, status } = useGameStore();
+  const { errorMessage, loadSave, status, offlineReward, dismissOfflineReward } = useGameStore();
 
   useEffect(() => {
     void loadSave();
@@ -30,7 +31,14 @@ function AppContent() {
   }
 
   if (status === "ready") {
-    return <GameScreen />;
+    return (
+      <>
+        <GameScreen />
+        {offlineReward !== null && (
+          <OfflineRewardModal summary={offlineReward} onDismiss={dismissOfflineReward} />
+        )}
+      </>
+    );
   }
 
   return (
