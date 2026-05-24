@@ -89,6 +89,13 @@ h2 {
   line-height: 1.25;
 }
 
+h3 {
+  margin: 0;
+  color: #d8d0c0;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
 .description,
 .panel-description {
   margin: 12px 0 0;
@@ -215,6 +222,10 @@ h2 {
   grid-row: span 2;
 }
 
+.inventory-panel {
+  grid-column: 1 / -1;
+}
+
 .panel-heading {
   display: grid;
   gap: 4px;
@@ -326,6 +337,118 @@ h2 {
   color: #aaa296;
 }
 
+.log-list,
+.inventory-list,
+.equipment-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.log-list {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.log-item,
+.inventory-row,
+.equipment-item {
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.log-item {
+  padding: 10px 12px;
+}
+
+.log-item span {
+  display: block;
+  color: #d3a75f;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.log-item p,
+.equipment-item p {
+  margin: 4px 0 0;
+  color: #d8d0c0;
+  line-height: 1.5;
+}
+
+.inventory-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.spirit-stone-count {
+  color: #f5f1e8;
+  font-size: 28px;
+}
+
+.inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.inventory-row span,
+.inventory-row strong {
+  color: #f5f1e8;
+}
+
+.equipment-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.equipment-item {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.equipment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.equipment-header strong {
+  color: #f5f1e8;
+}
+
+.equipment-header span,
+.equipment-item small,
+.muted-text {
+  color: #aaa296;
+}
+
+.rarity-common {
+  border-color: rgba(245, 241, 232, 0.1);
+}
+
+.rarity-uncommon {
+  border-color: rgba(123, 199, 164, 0.35);
+}
+
+.rarity-rare {
+  border-color: rgba(95, 158, 231, 0.4);
+}
+
+.rarity-epic {
+  border-color: rgba(185, 126, 219, 0.45);
+}
+
+.rarity-legendary {
+  border-color: rgba(214, 168, 95, 0.55);
+}
+
 .status-panel {
   display: flex;
   align-items: center;
@@ -367,7 +490,8 @@ h2 {
 
   .game-grid,
   .summary-row,
-  .stat-grid {
+  .stat-grid,
+  .equipment-list {
     grid-template-columns: 1fr;
   }
 

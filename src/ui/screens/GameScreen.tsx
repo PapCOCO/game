@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useGameStore } from "../../game/state/gameStore";
 import { CharacterPanel } from "../panels/CharacterPanel";
+import { CombatPanel } from "../panels/CombatPanel";
 import { CultivationPanel } from "../panels/CultivationPanel";
+import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
@@ -49,6 +51,8 @@ export function GameScreen() {
         <CharacterPanel save={save} />
         <CultivationPanel save={save} />
         <MapPanel save={save} />
+        <CombatPanel save={save} />
+        <InventoryPanel save={save} />
       </div>
     </main>
   );

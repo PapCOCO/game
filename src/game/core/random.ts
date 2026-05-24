@@ -14,6 +14,10 @@ export function randomFloat(min: number, max: number): number {
   return Math.random() * (upper - lower) + lower;
 }
 
+export function randomChance(rate: number): boolean {
+  return randomFloat(0, 1) <= Math.max(0, Math.min(1, rate));
+}
+
 export function pickWeighted<T>(entries: WeightedEntry<T>[]): T | null {
   const validEntries = entries.filter((entry) => entry.weight > 0);
   const totalWeight = validEntries.reduce((total, entry) => total + entry.weight, 0);

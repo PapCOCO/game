@@ -82,7 +82,7 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
       unlockedMapIds
     },
     autoBattle: {
-      enabled: false,
+      enabled: true,
       defeatedCount: 0
     },
     logs: {
