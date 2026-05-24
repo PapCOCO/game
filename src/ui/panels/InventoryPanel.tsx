@@ -1,13 +1,20 @@
 import { useState } from "react";
-import type { GameSaveData, ItemStack, ItemType } from "../../game/types";
+import type { EquipmentInstance, GameSaveData, ItemStack, ItemType } from "../../game/types";
 import { ITEMS } from "../../game/config";
+import { calculateEquipmentScore, formatEquipmentStats } from "../../game/core/equipment";
+import { useGameStore } from "../../game/state/gameStore";
 
-type InventoryTab = "materials" | "consumables" | "currencies";
+type InventoryTab = "materials" | "consumables" | "currencies" | "equipments";
+type HoveredEntry =
+  | { kind: "item"; stack: ItemStack }
+  | { kind: "equipment"; equipment: EquipmentInstance }
+  | null;
 
 const TAB_LABELS: Record<InventoryTab, string> = {
   materials: "材料",
   consumables: "丹药",
-  currencies: "杂项"
+  currencies: "杂项",
+  equipments: "装备"
 };
 
 const ITEM_TYPE_LABELS: Record<ItemType, string> = {
@@ -16,11 +23,18 @@ const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   currency: "杂项"
 };
 
+const SLOT_LABELS: Record<EquipmentInstance["slot"], string> = {
+  weapon: "武器",
+  armor: "护甲",
+  amulet: "护符",
+  ring: "戒指"
+};
+
 function getItemDefinition(itemId: string) {
   return ITEMS.find((item) => item.id === itemId);
 }
 
-function getStacks(save: GameSaveData, tab: InventoryTab): ItemStack[] {
+function getStacks(save: GameSaveData, tab: Exclude<InventoryTab, "equipments">): ItemStack[] {
   if (tab === "materials") {
     return save.inventory.materials;
   }
@@ -34,17 +48,28 @@ function getStacks(save: GameSaveData, tab: InventoryTab): ItemStack[] {
 
 function getTooltipPosition(clientX: number, clientY: number) {
   return {
-    x: Math.min(clientX + 16, window.innerWidth - 300),
-    y: Math.min(clientY + 12, window.innerHeight - 170)
+    x: Math.min(clientX + 16, window.innerWidth - 310),
+    y: Math.min(clientY + 12, window.innerHeight - 190)
   };
 }
 
 export function InventoryPanel({ save }: { save: GameSaveData }) {
+  const { discardEquipment, equipItemNow } = useGameStore();
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
-  const [hoveredStack, setHoveredStack] = useState<ItemStack | null>(null);
+  const [hoveredEntry, setHoveredEntry] = useState<HoveredEntry>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const stacks = getStacks(save, activeTab);
-  const hoveredItem = hoveredStack === null ? undefined : getItemDefinition(hoveredStack.itemId);
+  const equippedIds = new Set(Object.values(save.player.equipped));
+  const unequippedEquipments = save.inventory.equipments.filter(
+    (equipment) => !equippedIds.has(equipment.instanceId)
+  );
+  const stacks = activeTab === "equipments" ? [] : getStacks(save, activeTab);
+  const hoveredItem =
+    hoveredEntry?.kind === "item" ? getItemDefinition(hoveredEntry.stack.itemId) : undefined;
+
+  function showTooltip(entry: HoveredEntry, clientX: number, clientY: number) {
+    setHoveredEntry(entry);
+    setTooltipPosition(getTooltipPosition(clientX, clientY));
+  }
 
   return (
     <section className="panel inventory-panel text-panel">
@@ -59,7 +84,10 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
             className={tab === activeTab ? "tab-button tab-button-active" : "tab-button"}
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab);
+              setHoveredEntry(null);
+            }}
           >
             {TAB_LABELS[tab]}
           </button>
@@ -73,7 +101,52 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
         </div>
 
         <div className="inventory-compact-list" aria-label="物品列表">
-          {stacks.length === 0 ? (
+          {activeTab === "equipments" ? (
+            unequippedEquipments.length === 0 ? (
+              <p className="muted-text">没有未穿戴装备。</p>
+            ) : (
+              unequippedEquipments.map((equipment) => (
+                <div
+                  className="inventory-compact-row equipment-backpack-row"
+                  key={equipment.instanceId}
+                  onBlur={() => setHoveredEntry(null)}
+                  onFocus={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
+                  }}
+                  onMouseEnter={(event) =>
+                    showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                  }
+                  onMouseLeave={() => setHoveredEntry(null)}
+                  onMouseMove={(event) =>
+                    showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                  }
+                  tabIndex={0}
+                >
+                  <span className="inventory-item-name">{equipment.name}</span>
+                  <span className="inventory-item-meta">
+                    {SLOT_LABELS[equipment.slot]} · {equipment.rarity} · {calculateEquipmentScore(equipment).toFixed(0)}
+                  </span>
+                  <div className="inventory-row-actions">
+                    <button
+                      className="text-button"
+                      type="button"
+                      onClick={() => void equipItemNow(equipment.instanceId)}
+                    >
+                      穿
+                    </button>
+                    <button
+                      className="text-button"
+                      type="button"
+                      onClick={() => void discardEquipment(equipment.instanceId)}
+                    >
+                      弃
+                    </button>
+                  </div>
+                </div>
+              ))
+            )
+          ) : stacks.length === 0 ? (
             <p className="muted-text">此类物品尚无收获。</p>
           ) : (
             stacks.map((stack) => {
@@ -84,18 +157,16 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
                   className="inventory-compact-row"
                   key={stack.itemId}
                   type="button"
-                  onBlur={() => setHoveredStack(null)}
+                  onBlur={() => setHoveredEntry(null)}
                   onFocus={(event) => {
                     const rect = event.currentTarget.getBoundingClientRect();
-                    setHoveredStack(stack);
-                    setTooltipPosition(getTooltipPosition(rect.right, rect.top));
+                    showTooltip({ kind: "item", stack }, rect.right, rect.top);
                   }}
-                  onMouseEnter={(event) => {
-                    setHoveredStack(stack);
-                    setTooltipPosition(getTooltipPosition(event.clientX, event.clientY));
-                  }}
-                  onMouseLeave={() => setHoveredStack(null)}
-                  onMouseMove={(event) => setTooltipPosition(getTooltipPosition(event.clientX, event.clientY))}
+                  onMouseEnter={(event) =>
+                    showTooltip({ kind: "item", stack }, event.clientX, event.clientY)
+                  }
+                  onMouseLeave={() => setHoveredEntry(null)}
+                  onMouseMove={(event) => showTooltip({ kind: "item", stack }, event.clientX, event.clientY)}
                 >
                   <span className="inventory-item-name">{item?.name ?? stack.itemId}</span>
                   <span className="inventory-item-meta">{item?.rarity ?? "未知"} · x{stack.quantity}</span>
@@ -106,18 +177,39 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
         </div>
       </div>
 
-      {hoveredStack !== null ? (
+      {hoveredEntry !== null ? (
         <div
           className="floating-item-detail"
           role="tooltip"
           style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
         >
-          <strong>{hoveredItem?.name ?? hoveredStack.itemId}</strong>
-          <span>
-            {hoveredItem === undefined ? "未知" : `${ITEM_TYPE_LABELS[hoveredItem.type]} · ${hoveredItem.rarity}`}
-          </span>
-          <span>数量：{hoveredStack.quantity}</span>
-          <p>{hoveredItem?.description ?? "无描述。"}</p>
+          {hoveredEntry.kind === "item" ? (
+            <>
+              <strong>{hoveredItem?.name ?? hoveredEntry.stack.itemId}</strong>
+              <span>
+                {hoveredItem === undefined
+                  ? "未知"
+                  : `${ITEM_TYPE_LABELS[hoveredItem.type]} · ${hoveredItem.rarity}`}
+              </span>
+              <span>数量：{hoveredEntry.stack.quantity}</span>
+              <p>{hoveredItem?.description ?? "无描述。"}</p>
+            </>
+          ) : (
+            <>
+              <strong>{hoveredEntry.equipment.name}</strong>
+              <span>
+                {SLOT_LABELS[hoveredEntry.equipment.slot]} · {hoveredEntry.equipment.rarity} · 评分{" "}
+                {calculateEquipmentScore(hoveredEntry.equipment).toFixed(1)}
+              </span>
+              <p>{formatEquipmentStats(hoveredEntry.equipment)}</p>
+              <p>
+                词条：
+                {hoveredEntry.equipment.affixes.length > 0
+                  ? hoveredEntry.equipment.affixes.map((affix) => affix.name).join("、")
+                  : "无"}
+              </p>
+            </>
+          )}
         </div>
       ) : null}
     </section>

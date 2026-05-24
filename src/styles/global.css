@@ -1338,6 +1338,25 @@ h3 {
   margin-top: 6px;
 }
 
+.equipped-lines-only {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.equipped-slot-card {
+  padding: 6px;
+  border-bottom: 1px solid #252c28;
+}
+
+.equipped-slot-card p {
+  margin: 4px 0 0;
+  color: #9da697;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .equipped-line {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 34px;
@@ -1525,6 +1544,15 @@ h3 {
   cursor: default;
   text-align: left;
   background: transparent;
+}
+
+.equipment-backpack-row {
+  grid-template-columns: minmax(0, 1fr) minmax(92px, auto) auto;
+}
+
+.inventory-row-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .inventory-compact-row:hover,
