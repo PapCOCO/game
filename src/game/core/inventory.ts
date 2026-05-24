@@ -108,6 +108,37 @@ export function addItem(
   };
 }
 
+export function removeItem(
+  save: GameSaveData,
+  itemId: string,
+  quantity: number
+): GameSaveData {
+  const section = getInventorySection(itemId);
+
+  if (section === null) {
+    return save;
+  }
+
+  const stacks = save.inventory[section].map((stack) => {
+    if (stack.itemId !== itemId) {
+      return stack;
+    }
+
+    return {
+      ...stack,
+      quantity: Math.max(0, stack.quantity - quantity)
+    };
+  }).filter((stack) => stack.quantity > 0);
+
+  return {
+    ...save,
+    inventory: {
+      ...save.inventory,
+      [section]: stacks
+    }
+  };
+}
+
 export function applyLootToSave(save: GameSaveData, loot: LootResult, now = Date.now()): GameSaveData {
   const saveWithItems = addItemStacks(save, loot.items);
   const saveWithEquipments = addEquipments(saveWithItems, loot.equipments);

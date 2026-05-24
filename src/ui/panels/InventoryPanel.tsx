@@ -6,8 +6,9 @@ import type {
   ItemStack,
   ItemType
 } from "../../game/types";
-import { ITEMS } from "../../game/config";
+import { ITEMS, ENHANCEMENT_CONFIG, MAX_ENHANCEMENT_LEVEL } from "../../game/config";
 import { calculateEquipmentScore, formatEquipmentStats } from "../../game/core/equipment";
+import { canEnhance } from "../../game/core/enhancement";
 import { useGameStore } from "../../game/state/gameStore";
 
 type InventoryTab = "materials" | "consumables" | "currencies" | "equipments";
@@ -49,6 +50,10 @@ function getItemDefinition(itemId: string) {
   return ITEMS.find((item) => item.id === itemId);
 }
 
+function getItemName(itemId: string): string {
+  return ITEMS.find((item) => item.id === itemId)?.name ?? itemId;
+}
+
 function getStacks(save: GameSaveData, tab: Exclude<InventoryTab, "equipments">): ItemStack[] {
   if (tab === "materials") {
     return save.inventory.materials;
@@ -69,7 +74,7 @@ function getTooltipPosition(clientX: number, clientY: number) {
 }
 
 export function InventoryPanel({ save }: { save: GameSaveData }) {
-  const { discardEquipment, equipItemNow } = useGameStore();
+  const { discardEquipment, equipItemNow, enhanceEquipmentNow } = useGameStore();
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
   const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilter>("all");
   const [hoveredEntry, setHoveredEntry] = useState<HoveredEntry>(null);
@@ -149,50 +154,66 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
             visibleEquipments.length === 0 ? (
               <p className="muted-text">没有未穿戴装备。</p>
             ) : (
-              visibleEquipments.map((equipment) => (
-                <div
-                  className="inventory-compact-row equipment-backpack-row"
-                  key={equipment.instanceId}
-                >
-                  <span
-                    className="inventory-item-name inventory-hover-name"
-                    onBlur={() => setHoveredEntry(null)}
-                    onFocus={(event) => {
-                      const rect = event.currentTarget.getBoundingClientRect();
-                      showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
-                    }}
-                    onMouseEnter={(event) =>
-                      showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                    }
-                    onMouseLeave={() => setHoveredEntry(null)}
-                    onMouseMove={(event) =>
-                      showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                    }
-                    tabIndex={0}
+              visibleEquipments.map((equipment) => {
+                const enhancement = equipment.enhancement ?? 0;
+                const canEnhanceThis = canEnhance(save, equipment.instanceId);
+
+                return (
+                  <div
+                    className="inventory-compact-row equipment-backpack-row"
+                    key={equipment.instanceId}
                   >
-                    {equipment.name}
-                  </span>
-                  <span className="inventory-item-meta">
-                    {SLOT_LABELS[equipment.slot]} · {equipment.rarity} · {calculateEquipmentScore(equipment).toFixed(0)}
-                  </span>
-                  <div className="inventory-row-actions">
-                    <button
-                      className="text-button"
-                      type="button"
-                      onClick={() => void equipItemNow(equipment.instanceId)}
+                    <span
+                      className="inventory-item-name inventory-hover-name"
+                      onBlur={() => setHoveredEntry(null)}
+                      onFocus={(event) => {
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
+                      }}
+                      onMouseEnter={(event) =>
+                        showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                      }
+                      onMouseLeave={() => setHoveredEntry(null)}
+                      onMouseMove={(event) =>
+                        showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                      }
+                      tabIndex={0}
                     >
-                      穿
-                    </button>
-                    <button
-                      className="text-button"
-                      type="button"
-                      onClick={() => void discardEquipment(equipment.instanceId)}
-                    >
-                      弃
-                    </button>
+                      {equipment.name}
+                      {enhancement > 0 ? ` +${enhancement}` : ""}
+                    </span>
+                    <span className="inventory-item-meta">
+                      {SLOT_LABELS[equipment.slot]} · {equipment.rarity} · {calculateEquipmentScore(equipment).toFixed(0)}
+                    </span>
+                    <div className="inventory-row-actions">
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() => void equipItemNow(equipment.instanceId)}
+                      >
+                        穿
+                      </button>
+                      {enhancement < MAX_ENHANCEMENT_LEVEL && (
+                        <button
+                          className="text-button"
+                          type="button"
+                          disabled={!canEnhanceThis.can}
+                          onClick={() => void enhanceEquipmentNow(equipment.instanceId)}
+                        >
+                          强化
+                        </button>
+                      )}
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() => void discardEquipment(equipment.instanceId)}
+                      >
+                        弃
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )
           ) : stacks.length === 0 ? (
             <p className="muted-text">此类物品尚无收获。</p>
@@ -248,7 +269,10 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
             </>
           ) : (
             <>
-              <strong>{hoveredEntry.equipment.name}</strong>
+              <strong>
+                {hoveredEntry.equipment.name}
+                {(hoveredEntry.equipment.enhancement ?? 0) > 0 ? ` +${hoveredEntry.equipment.enhancement}` : ""}
+              </strong>
               <span>
                 {SLOT_LABELS[hoveredEntry.equipment.slot]} · {hoveredEntry.equipment.rarity} · 评分{" "}
                 {calculateEquipmentScore(hoveredEntry.equipment).toFixed(1)}
@@ -260,6 +284,15 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
                   ? hoveredEntry.equipment.affixes.map((affix) => affix.name).join("、")
                   : "无"}
               </p>
+              {(hoveredEntry.equipment.enhancement ?? 0) < MAX_ENHANCEMENT_LEVEL && (
+                <p style={{ fontSize: "11px", color: "#879084", marginTop: "4px" }}>
+                  强化 +{(hoveredEntry.equipment.enhancement ?? 0) + 1}: {ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].spiritStoneCost} 灵石
+                  {ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].materials.map((m) => ` · ${m.quantity} ${getItemName(m.itemId)}`).join("")}
+                  <span style={{ color: "#7fb3a0" }}>
+                    {" "}({(ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].successRate * 100).toFixed(0)}% 成功率)
+                  </span>
+                </p>
+              )}
             </>
           )}
         </div>

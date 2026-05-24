@@ -135,7 +135,10 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       materials: inventory.materials ?? [],
       consumables: inventory.consumables ?? [],
       currencies: inventory.currencies ?? [],
-      equipments: inventory.equipments ?? [],
+      equipments: (inventory.equipments ?? []).map((eq) => ({
+        ...eq,
+        enhancement: eq.enhancement ?? 0
+      })),
       maxEquipmentCount: inventory.maxEquipmentCount ?? 100
     },
     map: {

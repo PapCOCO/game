@@ -75,6 +75,7 @@ function createEquipmentInstance(equipmentId: string, now: number): EquipmentIns
     affixes: createAffixes(template.possibleAffixIds, template.rarity),
     level: 1,
     locked: false,
+    enhancement: 0,
     createdAt: now
   };
 }

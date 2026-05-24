@@ -20,6 +20,7 @@ import {
   equipItem as equipCoreItem,
   unequipItem as unequipCoreItem
 } from "../core/equipment";
+import { enhanceEquipment } from "../core/enhancement";
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
 import { craftPill } from "../core/alchemy";
@@ -60,6 +61,7 @@ interface GameStoreValue extends GameStoreState {
   plantEstateField: (fieldIndex: number, cropItemId: string) => Promise<void>;
   harvestEstateField: (fieldIndex: number) => Promise<void>;
   collectVeinCultivationNow: () => Promise<void>;
+  enhanceEquipmentNow: (instanceId: string) => Promise<void>;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
@@ -845,6 +847,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
+  const enhanceEquipmentNow = useCallback(async (instanceId: string) => {
+    if (state.save === null) {
+      return;
+    }
+
+    const nextSave = enhanceEquipment(state.save, instanceId);
+
+    setState({
+      save: nextSave,
+      status: "ready",
+      offlineReward: null
+    });
+
+    try {
+      await saveGameSave(nextSave);
+    } catch (error) {
+      setState({
+        save: nextSave,
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "强化后保存失败",
+        offlineReward: null
+      });
+    }
+  }, [state]);
+
   const value = useMemo<GameStoreValue>(
     () => ({
       ...state,
@@ -868,7 +895,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       upgradeEstateFacility,
       plantEstateField,
       harvestEstateField,
-      collectVeinCultivationNow
+      collectVeinCultivationNow,
+      enhanceEquipmentNow
     }),
     [
       breakthroughNow,
@@ -892,7 +920,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tick,
       toggleAutoBattleNow,
       unequipSlotNow,
-      upgradeEstateFacility
+      upgradeEstateFacility,
+      enhanceEquipmentNow
     ]
   );
 

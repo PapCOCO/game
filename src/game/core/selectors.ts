@@ -13,6 +13,7 @@ import { EMPTY_CORE_STATS } from "../types";
 import { MAPS, REALMS } from "../config";
 import { getUnlockedMapIdsByRealm } from "./mapUnlock";
 import { getLearnedTechniques } from "./technique";
+import { getEnhancementStats } from "./enhancement";
 
 const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
@@ -95,8 +96,9 @@ export function getEquippedEquipment(
 
 export function calculateEquipmentStats(equipment: EquipmentInstance): CoreStats {
   const stats = createEmptyStats();
+  const enhancedStats = getEnhancementStats(equipment.baseStats, equipment.enhancement);
 
-  addStats(stats, equipment.baseStats);
+  addStats(stats, enhancedStats);
 
   for (const affix of equipment.affixes) {
     for (const modifier of affix.modifiers) {
@@ -119,7 +121,8 @@ export function calculateFinalStats(save: GameSaveData): BattleStats {
   }
 
   for (const equipment of equippedEquipment) {
-    addStats(stats, equipment.baseStats);
+    const enhancedStats = getEnhancementStats(equipment.baseStats, equipment.enhancement);
+    addStats(stats, enhancedStats);
   }
 
   for (const equipment of equippedEquipment) {

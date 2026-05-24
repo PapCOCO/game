@@ -2,12 +2,13 @@ import type {
   CoreStats,
   EquipmentInstance,
   EquipmentSlot,
-  GameLogEntry,
   GameSaveData,
-  StatModifier
+  StatModifier,
+  GameLogEntry
 } from "../types";
 import { calculateFinalStats, getEquipmentByInstanceId } from "./selectors";
 import { createId } from "./random";
+import { getEnhancementStats } from "./enhancement";
 
 const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
@@ -57,7 +58,7 @@ function describeModifier(modifier: StatModifier): string {
   )}`;
 }
 
-function appendEquipmentLog(save: GameSaveData, message: string, now: number): GameSaveData {
+export function appendEquipmentLog(save: GameSaveData, message: string, now: number): GameSaveData {
   const entry: GameLogEntry = {
     id: createId("log"),
     type: "equipment",
@@ -74,7 +75,7 @@ function appendEquipmentLog(save: GameSaveData, message: string, now: number): G
   };
 }
 
-function touchSave(save: GameSaveData, now: number): GameSaveData {
+export function touchSave(save: GameSaveData, now: number): GameSaveData {
   return {
     ...save,
     meta: {
@@ -114,9 +115,10 @@ export function canEquip(save: GameSaveData, equipmentInstanceId: string): boole
 
 export function calculateEquipmentScore(equipment: EquipmentInstance): number {
   let score = 0;
+  const enhancedStats = getEnhancementStats(equipment.baseStats, equipment.enhancement);
 
   for (const stat of CORE_STAT_KEYS) {
-    score += (equipment.baseStats[stat] ?? 0) * SCORE_WEIGHTS[stat];
+    score += (enhancedStats[stat] ?? 0) * SCORE_WEIGHTS[stat];
   }
 
   for (const affix of equipment.affixes) {
@@ -129,11 +131,15 @@ export function calculateEquipmentScore(equipment: EquipmentInstance): number {
 }
 
 export function formatEquipmentStats(equipment: EquipmentInstance): string {
+  const enhancedStats = getEnhancementStats(equipment.baseStats, equipment.enhancement ?? 0);
   const baseStats = CORE_STAT_KEYS.flatMap((stat) => {
-    const value = equipment.baseStats[stat];
-    return value === undefined || value === 0
-      ? []
-      : [`${STAT_LABELS[stat]} +${formatStatValue(stat, value)}`];
+    const value = enhancedStats[stat];
+    const originalValue = equipment.baseStats[stat];
+    if (value === undefined || value === 0) return [];
+    if ((equipment.enhancement ?? 0) > 0 && originalValue !== value) {
+      return [`${STAT_LABELS[stat]} +${formatStatValue(stat, value)} (原始+${formatStatValue(stat, originalValue ?? 0)})`];
+    }
+    return [`${STAT_LABELS[stat]} +${formatStatValue(stat, value)}`];
   });
   const affixStats = equipment.affixes.flatMap((affix) =>
     affix.modifiers.map((modifier) => `${affix.name}: ${describeModifier(modifier)}`)

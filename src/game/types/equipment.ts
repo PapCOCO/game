@@ -38,6 +38,7 @@ export interface EquipmentInstance {
   affixes: EquipmentAffixInstance[];
   level: number;
   locked: boolean;
+  enhancement: number;
   createdAt: number;
 }
 
