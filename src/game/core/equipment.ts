@@ -13,6 +13,7 @@ const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
   "defense",
   "maxHp",
+  "speed",
   "cultivationSpeed",
   "spiritStoneBonus"
 ];
@@ -21,6 +22,7 @@ const STAT_LABELS: Record<keyof CoreStats, string> = {
   attack: "攻击",
   defense: "防御",
   maxHp: "气血",
+  speed: "速度",
   cultivationSpeed: "修炼速度",
   spiritStoneBonus: "灵石加成"
 };
@@ -29,6 +31,7 @@ const SCORE_WEIGHTS: Record<keyof CoreStats, number> = {
   attack: 2,
   defense: 1.5,
   maxHp: 0.2,
+  speed: 1.2,
   cultivationSpeed: 15,
   spiritStoneBonus: 100
 };

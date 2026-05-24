@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { getCurrentMap, getCurrentRealm } from "../../game/core/selectors";
+import {
+  calculateFinalStats,
+  getCurrentMap,
+  getCurrentRealm,
+  getPlayerPower
+} from "../../game/core/selectors";
 import { useGameStore } from "../../game/state/gameStore";
 
 interface EscapeMenuProps {
@@ -34,6 +39,8 @@ export function EscapeMenu({ isOpen, onClose, onToggleOpen }: EscapeMenuProps) {
 
   const realm = getCurrentRealm(save);
   const currentMap = getCurrentMap(save);
+  const finalStats = calculateFinalStats(save);
+  const power = getPlayerPower(save);
 
   return (
     <div className="escape-menu-backdrop" role="presentation">
@@ -67,6 +74,26 @@ export function EscapeMenu({ isOpen, onClose, onToggleOpen }: EscapeMenuProps) {
               <div>
                 <dt>灵石</dt>
                 <dd>{save.player.spiritStones}</dd>
+              </div>
+              <div>
+                <dt>战力</dt>
+                <dd>{power.toFixed(1)}</dd>
+              </div>
+              <div>
+                <dt>攻击</dt>
+                <dd>{finalStats.attack.toFixed(1)}</dd>
+              </div>
+              <div>
+                <dt>防御</dt>
+                <dd>{finalStats.defense.toFixed(1)}</dd>
+              </div>
+              <div>
+                <dt>气血</dt>
+                <dd>{finalStats.maxHp.toFixed(1)}</dd>
+              </div>
+              <div>
+                <dt>速度</dt>
+                <dd>{finalStats.speed.toFixed(1)}</dd>
               </div>
               <div>
                 <dt>自动保存</dt>

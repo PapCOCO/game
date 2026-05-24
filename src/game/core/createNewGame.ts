@@ -115,6 +115,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
   save.player.finalStats = calculateFinalStats(save);
   save.player.cultivation.cultivationPerSecond = save.player.finalStats.cultivationSpeed;
   save.autoBattle.playerCurrentHp = save.player.finalStats.maxHp;
+  save.autoBattle.playerActionProgress = 0;
+  save.autoBattle.enemyActionProgress = 0;
 
   return save;
 }

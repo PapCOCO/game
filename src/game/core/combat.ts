@@ -9,7 +9,14 @@ import { calculateFinalStats } from "./selectors";
 import { pickWeighted, randomFloat } from "./random";
 
 export type BattleRoundSummary = {
-  type: "none" | "player_attack" | "enemy_defeated" | "player_defeated" | "recovering";
+  type:
+    | "none"
+    | "player_attack"
+    | "enemy_attack"
+    | "enemy_defeated"
+    | "player_defeated"
+    | "recovering"
+    | "recovered";
   message: string;
   playerDamage?: number;
   enemyDamage?: number;
@@ -20,7 +27,11 @@ export type BattleRoundSummary = {
 const RECOVERY_DURATION_MS = 5000;
 
 export function calculateCombatPower(stats: CoreStats): number {
-  return stats.attack * 2 + stats.defense * 1.5 + stats.maxHp * 0.2;
+  return stats.attack * 2 + stats.defense * 1.5 + stats.maxHp * 0.2 + stats.speed * 1.2;
+}
+
+export function getActionGainPerSecond(speed: number): number {
+  return Math.max(10, 20 + speed);
 }
 
 export function createEnemyFromMonster(monsterId: string): BattleEnemyState | null {
@@ -60,6 +71,10 @@ export function calculateDamage(attackerStats: CoreStats, defenderStats: CoreSta
   const damage = Math.round(baseDamage * randomFloat(0.9, 1.1));
 
   return Math.max(1, damage);
+}
+
+function clampProgress(progress: number | undefined): number {
+  return Math.min(100, Math.max(0, progress ?? 0));
 }
 
 function getMonsterForEnemy(enemy: BattleEnemyState | undefined): MonsterDefinition | undefined {
@@ -104,7 +119,77 @@ export function ensureBattleState(save: GameSaveData, now = Date.now()): GameSav
     autoBattle: {
       ...save.autoBattle,
       currentEnemy: nextEnemy,
-      playerCurrentHp: nextPlayerHp
+      playerCurrentHp: nextPlayerHp,
+      playerActionProgress: clampProgress(save.autoBattle.playerActionProgress),
+      enemyActionProgress: clampProgress(save.autoBattle.enemyActionProgress)
+    }
+  };
+}
+
+export function advanceBattleTime(
+  save: GameSaveData,
+  seconds: number,
+  now = Date.now()
+): { save: GameSaveData; summary?: BattleRoundSummary } {
+  if (!save.autoBattle.enabled) {
+    return { save };
+  }
+
+  let nextSave = ensureBattleState(save, now);
+  const finalStats = calculateFinalStats(nextSave);
+  const recoveringUntil = nextSave.autoBattle.recoveringUntil;
+
+  if (recoveringUntil !== undefined && recoveringUntil > now) {
+    return { save: nextSave };
+  }
+
+  if (recoveringUntil !== undefined && recoveringUntil <= now) {
+    nextSave = {
+      ...nextSave,
+      autoBattle: {
+        ...nextSave.autoBattle,
+        playerCurrentHp: Math.max(1, finalStats.maxHp),
+        recoveringUntil: undefined,
+        playerActionProgress: 0,
+        enemyActionProgress: 0
+      }
+    };
+    nextSave = ensureBattleState(nextSave, now);
+
+    return {
+      save: nextSave,
+      summary: {
+        type: "recovered",
+        message: "调息完成，重新投入历练。"
+      }
+    };
+  }
+
+  const enemy = nextSave.autoBattle.currentEnemy;
+  const monster = getMonsterForEnemy(enemy);
+
+  if (enemy === undefined || monster === undefined) {
+    return { save: nextSave };
+  }
+
+  const elapsedSeconds = Math.max(0, seconds);
+
+  return {
+    save: {
+      ...nextSave,
+      autoBattle: {
+        ...nextSave.autoBattle,
+        playerActionProgress: Math.min(
+          100,
+          (nextSave.autoBattle.playerActionProgress ?? 0) +
+            getActionGainPerSecond(finalStats.speed) * elapsedSeconds
+        ),
+        enemyActionProgress: Math.min(
+          100,
+          (nextSave.autoBattle.enemyActionProgress ?? 0) +
+            getActionGainPerSecond(monster.stats.speed) * elapsedSeconds
+        )
+      }
     }
   };
 }
@@ -123,7 +208,7 @@ export function resolveBattleRound(
     };
   }
 
-  let nextSave = ensureBattleState(save, now);
+  const nextSave = ensureBattleState(save, now);
   const finalStats = calculateFinalStats(nextSave);
   const maxPlayerHp = Math.max(1, finalStats.maxHp);
   const recoveringUntil = nextSave.autoBattle.recoveringUntil;
@@ -136,18 +221,6 @@ export function resolveBattleRound(
         message: "调息恢复中。"
       }
     };
-  }
-
-  if (recoveringUntil !== undefined && recoveringUntil <= now) {
-    nextSave = {
-      ...nextSave,
-      autoBattle: {
-        ...nextSave.autoBattle,
-        playerCurrentHp: maxPlayerHp,
-        recoveringUntil: undefined
-      }
-    };
-    nextSave = ensureBattleState(nextSave, now);
   }
 
   const enemy = nextSave.autoBattle.currentEnemy;
@@ -163,10 +236,50 @@ export function resolveBattleRound(
     };
   }
 
-  const playerDamage = calculateDamage(finalStats, monster.stats);
-  const enemyHpAfterAttack = Math.max(0, enemy.currentHp - playerDamage);
+  const playerProgress = nextSave.autoBattle.playerActionProgress ?? 0;
+  const enemyProgress = nextSave.autoBattle.enemyActionProgress ?? 0;
 
-  if (enemyHpAfterAttack <= 0) {
+  if (playerProgress < 100 && enemyProgress < 100) {
+    return {
+      save: nextSave,
+      summary: {
+        type: "none",
+        message: "蓄势中。"
+      }
+    };
+  }
+
+  const shouldPlayerAct = playerProgress >= 100 && playerProgress >= enemyProgress;
+
+  if (shouldPlayerAct) {
+    const playerDamage = calculateDamage(finalStats, monster.stats);
+    const enemyHpAfterAttack = Math.max(0, enemy.currentHp - playerDamage);
+    const playerActionProgress = Math.max(0, playerProgress - 100);
+
+    if (enemyHpAfterAttack <= 0) {
+      return {
+        save: {
+          ...nextSave,
+          autoBattle: {
+            ...nextSave.autoBattle,
+            currentEnemy: {
+              ...enemy,
+              currentHp: 0
+            },
+            playerCurrentHp: nextSave.autoBattle.playerCurrentHp ?? maxPlayerHp,
+            playerActionProgress
+          }
+        },
+        summary: {
+          type: "enemy_defeated",
+          message: `你出手攻击 ${monster.name}，造成 ${playerDamage} 伤害，并将其击败。`,
+          playerDamage,
+          monsterId: monster.id,
+          monsterName: monster.name
+        }
+      };
+    }
+
     return {
       save: {
         ...nextSave,
@@ -174,14 +287,14 @@ export function resolveBattleRound(
           ...nextSave.autoBattle,
           currentEnemy: {
             ...enemy,
-            currentHp: 0
+            currentHp: enemyHpAfterAttack
           },
-          playerCurrentHp: nextSave.autoBattle.playerCurrentHp ?? maxPlayerHp
+          playerActionProgress
         }
       },
       summary: {
-        type: "enemy_defeated",
-        message: `你攻击 ${monster.name}，造成 ${playerDamage} 伤害，并将其击败。`,
+        type: "player_attack",
+        message: `你出手攻击 ${monster.name}，造成 ${playerDamage} 伤害。`,
         playerDamage,
         monsterId: monster.id,
         monsterName: monster.name
@@ -190,12 +303,13 @@ export function resolveBattleRound(
   }
 
   const enemyDamage = calculateDamage(monster.stats, finalStats);
-  const playerHpAfterCounter = Math.max(
+  const playerHpAfterAttack = Math.max(
     0,
     (nextSave.autoBattle.playerCurrentHp ?? maxPlayerHp) - enemyDamage
   );
+  const enemyActionProgress = Math.max(0, enemyProgress - 100);
 
-  if (playerHpAfterCounter <= 0) {
+  if (playerHpAfterAttack <= 0) {
     return {
       save: {
         ...nextSave,
@@ -203,13 +317,14 @@ export function resolveBattleRound(
           ...nextSave.autoBattle,
           currentEnemy: undefined,
           playerCurrentHp: 0,
-          recoveringUntil: now + RECOVERY_DURATION_MS
+          recoveringUntil: now + RECOVERY_DURATION_MS,
+          playerActionProgress: 0,
+          enemyActionProgress: 0
         }
       },
       summary: {
         type: "player_defeated",
-        message: `你攻击 ${monster.name}，造成 ${playerDamage} 伤害；${monster.name} 反击造成 ${enemyDamage} 伤害，你正在调息恢复。`,
-        playerDamage,
+        message: `${monster.name} 出手反击，造成 ${enemyDamage} 伤害，你正在调息恢复。`,
         enemyDamage,
         monsterId: monster.id,
         monsterName: monster.name
@@ -222,17 +337,13 @@ export function resolveBattleRound(
       ...nextSave,
       autoBattle: {
         ...nextSave.autoBattle,
-        currentEnemy: {
-          ...enemy,
-          currentHp: enemyHpAfterAttack
-        },
-        playerCurrentHp: playerHpAfterCounter
+        playerCurrentHp: playerHpAfterAttack,
+        enemyActionProgress
       }
     },
     summary: {
-      type: "player_attack",
-      message: `你攻击 ${monster.name}，造成 ${playerDamage} 伤害；${monster.name} 反击造成 ${enemyDamage} 伤害。`,
-      playerDamage,
+      type: "enemy_attack",
+      message: `${monster.name} 出手反击，造成 ${enemyDamage} 伤害。`,
       enemyDamage,
       monsterId: monster.id,
       monsterName: monster.name

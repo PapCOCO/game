@@ -15,7 +15,9 @@ export const AFFIX_IDS = {
   DEEP_BREATH: "affix.deep_breath",
   MOUNTAIN_FORCE: "affix.mountain_force",
   CLOUD_STEP: "affix.cloud_step",
-  SPIRIT_DRAW: "affix.spirit_draw"
+  SPIRIT_DRAW: "affix.spirit_draw",
+  LIGHT_BODY: "affix.light_body",
+  SWIFT_STEP: "affix.swift_step"
 } as const;
 
 export const AFFIXES: EquipmentAffixDefinition[] = [
@@ -141,5 +143,19 @@ export const AFFIXES: EquipmentAffixDefinition[] = [
       { stat: "cultivationSpeed", type: "percent", value: 0.2 },
       { stat: "spiritStoneBonus", type: "flat", value: 0.14 }
     ]
+  },
+  {
+    id: AFFIX_IDS.LIGHT_BODY,
+    name: "轻身",
+    description: "提升行动速度。",
+    rarity: "uncommon",
+    modifiers: [{ stat: "speed", type: "flat", value: 4 }]
+  },
+  {
+    id: AFFIX_IDS.SWIFT_STEP,
+    name: "疾行",
+    description: "按比例提升行动速度。",
+    rarity: "rare",
+    modifiers: [{ stat: "speed", type: "percent", value: 0.08 }]
   }
 ];

@@ -16,8 +16,10 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
   const playerStats = calculateFinalStats(save);
   const playerMaxHp = Math.max(1, playerStats.maxHp);
   const playerCurrentHp = Math.min(save.autoBattle.playerCurrentHp ?? playerMaxHp, playerMaxHp);
+  const playerActionProgress = Math.min(100, save.autoBattle.playerActionProgress ?? 0);
   const enemy = save.autoBattle.currentEnemy;
   const monster = enemy === undefined ? undefined : MONSTERS.find((item) => item.id === enemy.monsterId);
+  const enemyActionProgress = Math.min(100, save.autoBattle.enemyActionProgress ?? 0);
   const recoveringUntil = save.autoBattle.recoveringUntil;
   const isRecovering = recoveringUntil !== undefined && recoveringUntil > Date.now();
   const combatLogs = save.logs.entries
@@ -62,11 +64,20 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
             <small>{isRecovering ? "调息恢复中" : "战斗中"}</small>
           </div>
           <ProgressBar value={playerCurrentHp / playerMaxHp} />
+          <div className="action-progress">
+            <div className="combatant-meta">
+              <span>行动</span>
+              <span>{formatNumber(playerActionProgress)}%</span>
+            </div>
+            <ProgressBar value={playerActionProgress / 100} />
+          </div>
           <div className="combatant-meta">
             <span>
               气血 {formatNumber(playerCurrentHp)} / {formatNumber(playerMaxHp)}
             </span>
-            <span>战力 {formatNumber(calculateCombatPower(playerStats))}</span>
+            <span>
+              速 {formatNumber(playerStats.speed)} · 战力 {formatNumber(calculateCombatPower(playerStats))}
+            </span>
           </div>
         </div>
 
@@ -76,6 +87,13 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
             <small>{monster === undefined ? "待遭遇" : `Lv.${monster.level}`}</small>
           </div>
           <ProgressBar value={enemy === undefined ? 0 : enemy.currentHp / enemy.maxHp} />
+          <div className="action-progress">
+            <div className="combatant-meta">
+              <span>行动</span>
+              <span>{monster === undefined ? "0%" : `${formatNumber(enemyActionProgress)}%`}</span>
+            </div>
+            <ProgressBar value={monster === undefined ? 0 : enemyActionProgress / 100} />
+          </div>
           <div className="combatant-meta">
             {enemy === undefined || monster === undefined ? (
               <span>暂无敌人状态。</span>
@@ -85,8 +103,8 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
                   气血 {formatNumber(enemy.currentHp)} / {formatNumber(enemy.maxHp)}
                 </span>
                 <span>
-                  攻 {formatNumber(monster.stats.attack)} · 防 {formatNumber(monster.stats.defense)} · 战力{" "}
-                  {formatNumber(calculateCombatPower(monster.stats))}
+                  攻 {formatNumber(monster.stats.attack)} · 防 {formatNumber(monster.stats.defense)} · 速{" "}
+                  {formatNumber(monster.stats.speed)}
                 </span>
               </>
             )}

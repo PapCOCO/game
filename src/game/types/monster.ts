@@ -43,6 +43,8 @@ export interface AutoBattleState {
   defeatedCount: number;
   playerCurrentHp?: number;
   recoveringUntil?: number;
+  playerActionProgress?: number;
+  enemyActionProgress?: number;
 }
 
 export interface MonsterSpawnPool {

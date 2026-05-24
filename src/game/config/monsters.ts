@@ -23,7 +23,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "青石灰狼",
     description: "青石山外围常见的野狼，受灵气影响比寻常野兽更凶悍。",
     level: 1,
-    stats: { attack: 7, defense: 2, maxHp: 45, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 7, defense: 2, maxHp: 45, speed: 13, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 45,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.QINGSHI_SMALL_BEAST]
   },
@@ -32,7 +32,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "撞山野猪",
     description: "皮糙肉厚的山猪，冲撞时会带起碎石。",
     level: 2,
-    stats: { attack: 9, defense: 4, maxHp: 62, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 9, defense: 4, maxHp: 62, speed: 8, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 62,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.QINGSHI_SMALL_BEAST]
   },
@@ -41,7 +41,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "凝气灵兔",
     description: "常在灵草附近出没的小妖兽，行动敏捷。",
     level: 2,
-    stats: { attack: 8, defense: 3, maxHp: 50, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 8, defense: 3, maxHp: 50, speed: 18, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 50,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.QINGSHI_HERB_GUARD]
   },
@@ -50,7 +50,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "苔纹青蛇",
     description: "鳞片覆有青苔纹路的毒蛇，守在潮湿灵草旁。",
     level: 3,
-    stats: { attack: 13, defense: 5, maxHp: 76, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 13, defense: 5, maxHp: 76, speed: 15, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 76,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.QINGSHI_HERB_GUARD]
   },
@@ -59,7 +59,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "石背熊",
     description: "背部结出石甲的山熊，炼气中期修士也不可轻敌。",
     level: 4,
-    stats: { attack: 18, defense: 10, maxHp: 150, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 18, defense: 10, maxHp: 150, speed: 7, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 150,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.QINGSHI_DEEP_BEAST]
   },
@@ -68,7 +68,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "影鸦",
     description: "黑风林上空盘旋的妖鸦，会从阴影中俯冲袭击。",
     level: 5,
-    stats: { attack: 24, defense: 9, maxHp: 125, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 24, defense: 9, maxHp: 125, speed: 20, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 125,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.BLACKWIND_SCOUT]
   },
@@ -77,7 +77,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "黑风散修",
     description: "盘踞黑风林的落魄散修，精于偷袭与搜刮。",
     level: 6,
-    stats: { attack: 32, defense: 14, maxHp: 190, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 32, defense: 14, maxHp: 190, speed: 14, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 190,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.BLACKWIND_ELITE]
   },
@@ -86,7 +86,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "荆棘妖藤",
     description: "吸纳黑风林阴湿灵气化生的妖藤。",
     level: 6,
-    stats: { attack: 28, defense: 18, maxHp: 230, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 28, defense: 18, maxHp: 230, speed: 9, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 230,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.BLACKWIND_ELITE]
   },
@@ -95,7 +95,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "矿洞噬鼠",
     description: "啃食矿渣长大的巨鼠，牙齿泛着金属光泽。",
     level: 5,
-    stats: { attack: 25, defense: 12, maxHp: 160, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 25, defense: 12, maxHp: 160, speed: 16, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 160,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.MINE_BEAST]
   },
@@ -104,7 +104,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "吞矿兽",
     description: "以赤纹铁矿为食的妖兽，甲壳坚硬。",
     level: 7,
-    stats: { attack: 38, defense: 26, maxHp: 310, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 38, defense: 26, maxHp: 310, speed: 8, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 310,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.MINE_BEAST]
   },
@@ -113,7 +113,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "矿井阴魂",
     description: "废弃矿洞深处游荡的阴魂，会扰乱修士气息。",
     level: 8,
-    stats: { attack: 45, defense: 22, maxHp: 280, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 45, defense: 22, maxHp: 280, speed: 12, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 280,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.MINE_SPIRIT]
   },
@@ -122,7 +122,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "雾隐灵蛛",
     description: "潜伏雾隐谷的灵蛛，吐丝无声无息。",
     level: 8,
-    stats: { attack: 52, defense: 24, maxHp: 330, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 52, defense: 24, maxHp: 330, speed: 18, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 330,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.MIST_INSECT]
   },
@@ -131,7 +131,7 @@ export const MONSTERS: MonsterDefinition[] = [
     name: "迷雾幻灵",
     description: "雾隐谷灵气与残念交织出的幻灵，接近筑基门槛。",
     level: 9,
-    stats: { attack: 68, defense: 34, maxHp: 460, cultivationSpeed: 0, spiritStoneBonus: 0 },
+    stats: { attack: 68, defense: 34, maxHp: 460, speed: 16, cultivationSpeed: 0, spiritStoneBonus: 0 },
     maxHp: 460,
     dropTable: DROP_TABLES[DROP_TABLE_IDS.MIST_SPIRIT]
   }

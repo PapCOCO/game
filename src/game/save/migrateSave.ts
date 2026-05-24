@@ -117,7 +117,9 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       enabled: input.autoBattle?.enabled ?? true,
       currentEnemy: normalizedEnemy,
       defeatedCount: input.autoBattle?.defeatedCount ?? 0,
-      recoveringUntil: input.autoBattle?.recoveringUntil
+      recoveringUntil: input.autoBattle?.recoveringUntil,
+      playerActionProgress: Math.min(Math.max(0, input.autoBattle?.playerActionProgress ?? 0), 100),
+      enemyActionProgress: Math.min(Math.max(0, input.autoBattle?.enemyActionProgress ?? 0), 100)
     },
     logs: {
       ...logs,
@@ -163,7 +165,9 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     },
     autoBattle: {
       ...normalizedSave.autoBattle,
-      playerCurrentHp
+      playerCurrentHp,
+      playerActionProgress: normalizedSave.autoBattle.playerActionProgress ?? 0,
+      enemyActionProgress: normalizedSave.autoBattle.enemyActionProgress ?? 0
     }
   };
 }

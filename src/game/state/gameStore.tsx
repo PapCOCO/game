@@ -254,6 +254,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           autoBattle: {
             ...state.save.autoBattle,
             currentEnemy: undefined,
+            playerActionProgress: 0,
+            enemyActionProgress: 0,
             lastAttackAt: now,
             battleStartedAt: state.save.autoBattle.battleStartedAt ?? now
           }

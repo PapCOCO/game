@@ -17,6 +17,7 @@ const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
   "defense",
   "maxHp",
+  "speed",
   "cultivationSpeed",
   "spiritStoneBonus"
 ];
@@ -153,7 +154,7 @@ export function getCultivationProgress(save: GameSaveData): number {
 export function getPlayerPower(save: GameSaveData): number {
   const stats = calculateFinalStats(save);
 
-  return stats.attack * 2 + stats.defense * 1.5 + stats.maxHp * 0.2;
+  return stats.attack * 2 + stats.defense * 1.5 + stats.maxHp * 0.2 + stats.speed * 1.2;
 }
 
 export function getUnlockedMaps(save: GameSaveData): MapDefinition[] {

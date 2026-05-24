@@ -14,10 +14,6 @@ export function MapPanel({ save }: { save: GameSaveData }) {
         <h2>{currentMap?.name ?? "未知地图"}</h2>
       </div>
 
-      <p className="panel-description">
-        {currentMap?.description ?? "当前存档记录的地图不存在于配置表中。"}
-      </p>
-
       <div className="map-list" aria-label="已解锁地图列表">
         {unlockedMaps.map((map) => (
           <div
@@ -35,7 +31,7 @@ export function MapPanel({ save }: { save: GameSaveData }) {
                 {map.id === save.map.currentMapId ? "当前" : "前往"}
               </button>
             </div>
-            <p>{map.description}</p>
+            <p title={map.description}>{map.description}</p>
             <small>
               修为 {map.baseCultivationPerSecond}/秒 · 灵石 {map.baseSpiritStonesPerMinute}/分
             </small>

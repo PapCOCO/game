@@ -28,7 +28,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     rarity: "common",
     baseStats: { attack: 10 },
     minLevel: 1,
-    possibleAffixIds: [AFFIX_IDS.SHARP, AFFIX_IDS.FLOWING_QI]
+    possibleAffixIds: [AFFIX_IDS.SHARP, AFFIX_IDS.FLOWING_QI, AFFIX_IDS.LIGHT_BODY]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.QINGSHI_BLADE,
@@ -36,9 +36,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "以青石山矿铁炼成，刃口带有淡淡灵光。",
     slot: "weapon",
     rarity: "uncommon",
-    baseStats: { attack: 18, cultivationSpeed: 0.08 },
+    baseStats: { attack: 18, speed: 1, cultivationSpeed: 0.08 },
     minLevel: 3,
-    possibleAffixIds: [AFFIX_IDS.SHARP, AFFIX_IDS.PIERCING, AFFIX_IDS.FLOWING_QI]
+    possibleAffixIds: [AFFIX_IDS.SHARP, AFFIX_IDS.PIERCING, AFFIX_IDS.FLOWING_QI, AFFIX_IDS.LIGHT_BODY]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_SABER,
@@ -48,7 +48,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     rarity: "rare",
     baseStats: { attack: 32 },
     minLevel: 6,
-    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.MOUNTAIN_FORCE, AFFIX_IDS.FLOWING_QI]
+    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.MOUNTAIN_FORCE, AFFIX_IDS.FLOWING_QI, AFFIX_IDS.SWIFT_STEP]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.MISTLIGHT_SWORD,
@@ -56,9 +56,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "剑身若雾，适合炼气后期修士温养。",
     slot: "weapon",
     rarity: "epic",
-    baseStats: { attack: 48, cultivationSpeed: 0.18 },
+    baseStats: { attack: 48, speed: 2, cultivationSpeed: 0.18 },
     minLevel: 8,
-    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.DEEP_BREATH, AFFIX_IDS.SPIRIT_DRAW]
+    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.DEEP_BREATH, AFFIX_IDS.SPIRIT_DRAW, AFFIX_IDS.SWIFT_STEP]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.CLOTH_ROBE,
@@ -108,7 +108,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     rarity: "common",
     baseStats: { maxHp: 24, defense: 2 },
     minLevel: 1,
-    possibleAffixIds: [AFFIX_IDS.GUARDING, AFFIX_IDS.QUICKENING]
+    possibleAffixIds: [AFFIX_IDS.GUARDING, AFFIX_IDS.QUICKENING, AFFIX_IDS.LIGHT_BODY]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.JADE_AMULET,
@@ -116,9 +116,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "以裂纹灵玉打磨出的护符，能略微凝神。",
     slot: "amulet",
     rarity: "uncommon",
-    baseStats: { maxHp: 45, cultivationSpeed: 0.08 },
+    baseStats: { maxHp: 45, speed: 1, cultivationSpeed: 0.08 },
     minLevel: 4,
-    possibleAffixIds: [AFFIX_IDS.VITAL, AFFIX_IDS.QUICKENING, AFFIX_IDS.GOLDEN_LIGHT]
+    possibleAffixIds: [AFFIX_IDS.VITAL, AFFIX_IDS.QUICKENING, AFFIX_IDS.GOLDEN_LIGHT, AFFIX_IDS.LIGHT_BODY]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.MIST_AMULET,
@@ -126,9 +126,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "雾气缠绕的护符，佩戴时心神清明。",
     slot: "amulet",
     rarity: "rare",
-    baseStats: { maxHp: 85, cultivationSpeed: 0.15 },
+    baseStats: { maxHp: 85, speed: 2, cultivationSpeed: 0.15 },
     minLevel: 7,
-    possibleAffixIds: [AFFIX_IDS.DEEP_BREATH, AFFIX_IDS.CLOUD_STEP, AFFIX_IDS.SPIRIT_DRAW]
+    possibleAffixIds: [AFFIX_IDS.DEEP_BREATH, AFFIX_IDS.CLOUD_STEP, AFFIX_IDS.SPIRIT_DRAW, AFFIX_IDS.SWIFT_STEP]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.COPPER_RING,
@@ -138,7 +138,7 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     rarity: "common",
     baseStats: { spiritStoneBonus: 0.03 },
     minLevel: 1,
-    possibleAffixIds: [AFFIX_IDS.PROSPEROUS, AFFIX_IDS.GUARDING]
+    possibleAffixIds: [AFFIX_IDS.PROSPEROUS, AFFIX_IDS.GUARDING, AFFIX_IDS.LIGHT_BODY]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.SPIRIT_GATHERING_RING,
@@ -146,9 +146,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "能够缓慢牵引周遭灵气的戒指。",
     slot: "ring",
     rarity: "uncommon",
-    baseStats: { cultivationSpeed: 0.1, spiritStoneBonus: 0.04 },
+    baseStats: { speed: 1, cultivationSpeed: 0.1, spiritStoneBonus: 0.04 },
     minLevel: 4,
-    possibleAffixIds: [AFFIX_IDS.QUICKENING, AFFIX_IDS.PROSPEROUS, AFFIX_IDS.FLOWING_QI]
+    possibleAffixIds: [AFFIX_IDS.QUICKENING, AFFIX_IDS.PROSPEROUS, AFFIX_IDS.FLOWING_QI, AFFIX_IDS.SWIFT_STEP]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_RING,
@@ -156,9 +156,9 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "黑风林散修首领珍藏的戒指。",
     slot: "ring",
     rarity: "rare",
-    baseStats: { attack: 10, spiritStoneBonus: 0.08 },
+    baseStats: { attack: 10, speed: 2, spiritStoneBonus: 0.08 },
     minLevel: 6,
-    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.GOLDEN_LIGHT, AFFIX_IDS.MOUNTAIN_FORCE]
+    possibleAffixIds: [AFFIX_IDS.PIERCING, AFFIX_IDS.GOLDEN_LIGHT, AFFIX_IDS.MOUNTAIN_FORCE, AFFIX_IDS.SWIFT_STEP]
   },
   {
     id: EQUIPMENT_TEMPLATE_IDS.FOUNDATION_SEED_RING,
@@ -166,8 +166,8 @@ export const EQUIPMENT_TEMPLATES: EquipmentDefinition[] = [
     description: "玉色温润的珍稀戒指，可助炼气圆满者凝练根基。",
     slot: "ring",
     rarity: "legendary",
-    baseStats: { attack: 20, defense: 16, cultivationSpeed: 0.28, spiritStoneBonus: 0.16 },
+    baseStats: { attack: 20, defense: 16, speed: 4, cultivationSpeed: 0.28, spiritStoneBonus: 0.16 },
     minLevel: 9,
-    possibleAffixIds: [AFFIX_IDS.CLOUD_STEP, AFFIX_IDS.SPIRIT_DRAW, AFFIX_IDS.MOUNTAIN_FORCE]
+    possibleAffixIds: [AFFIX_IDS.CLOUD_STEP, AFFIX_IDS.SPIRIT_DRAW, AFFIX_IDS.MOUNTAIN_FORCE, AFFIX_IDS.SWIFT_STEP]
   }
 ];

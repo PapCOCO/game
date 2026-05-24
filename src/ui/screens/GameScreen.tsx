@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useGameStore } from "../../game/state/gameStore";
-import { getCurrentRealm } from "../../game/core/selectors";
+import { getCurrentMap, getCurrentRealm, getPlayerPower } from "../../game/core/selectors";
 import { CharacterPanel } from "../panels/CharacterPanel";
 import { CombatPanel } from "../panels/CombatPanel";
 import { CultivationPanel } from "../panels/CultivationPanel";
@@ -8,7 +8,6 @@ import { EquipmentPanel } from "../panels/EquipmentPanel";
 import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
 import { EscapeMenu } from "../components/EscapeMenu";
-import { LogPanel } from "../components/LogPanel";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
 
@@ -25,6 +24,8 @@ export function GameScreen() {
   }
 
   const currentRealm = getCurrentRealm(save);
+  const currentMap = getCurrentMap(save);
+  const playerPower = getPlayerPower(save);
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((current) => !current);
   }, []);
@@ -43,10 +44,10 @@ export function GameScreen() {
 
   return (
     <main className="app-shell game-shell">
-      <header className="game-header">
+      <header className="game-topbar">
         <div className="topbar-title">
-          <p className="eyebrow">Single Player Idle</p>
           <h1>修仙挂机 MVP Plus</h1>
+          <span>{save.meta.slotId}</span>
         </div>
 
         <div className="topbar-meta" aria-label="角色概要">
@@ -61,6 +62,18 @@ export function GameScreen() {
           <div className="topbar-stat">
             <span>灵石</span>
             <strong>{save.player.spiritStones}</strong>
+          </div>
+          <div className="topbar-stat">
+            <span>战力</span>
+            <strong>{playerPower.toFixed(1)}</strong>
+          </div>
+          <div className="topbar-stat">
+            <span>地图</span>
+            <strong>{currentMap?.name ?? save.map.currentMapId}</strong>
+          </div>
+          <div className="topbar-stat">
+            <span>历练</span>
+            <strong>{save.autoBattle.enabled ? "开启" : "暂停"}</strong>
           </div>
         </div>
 
@@ -84,13 +97,6 @@ export function GameScreen() {
 
         <div className="game-column center-column">
           <CombatPanel save={save} />
-          <section className="panel log-panel">
-            <div className="panel-heading">
-              <span className="eyebrow">Log</span>
-              <h2>历程</h2>
-            </div>
-            <LogPanel logs={save.logs.entries} />
-          </section>
         </div>
 
         <div className="game-column right-column">

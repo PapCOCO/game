@@ -24,6 +24,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 8,
       defense: 4,
       maxHp: 80,
+      speed: 8,
       cultivationSpeed: 1,
       spiritStoneBonus: 0
     }
@@ -38,6 +39,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 11,
       defense: 6,
       maxHp: 105,
+      speed: 9,
       cultivationSpeed: 1.15,
       spiritStoneBonus: 0.02
     }
@@ -52,6 +54,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 15,
       defense: 8,
       maxHp: 135,
+      speed: 10,
       cultivationSpeed: 1.35,
       spiritStoneBonus: 0.04
     }
@@ -66,6 +69,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 20,
       defense: 11,
       maxHp: 170,
+      speed: 11,
       cultivationSpeed: 1.6,
       spiritStoneBonus: 0.06
     }
@@ -80,6 +84,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 26,
       defense: 15,
       maxHp: 215,
+      speed: 12,
       cultivationSpeed: 1.9,
       spiritStoneBonus: 0.08
     }
@@ -94,6 +99,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 34,
       defense: 20,
       maxHp: 270,
+      speed: 13,
       cultivationSpeed: 2.25,
       spiritStoneBonus: 0.11
     }
@@ -108,6 +114,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 44,
       defense: 26,
       maxHp: 340,
+      speed: 15,
       cultivationSpeed: 2.7,
       spiritStoneBonus: 0.14
     }
@@ -122,6 +129,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 57,
       defense: 34,
       maxHp: 430,
+      speed: 17,
       cultivationSpeed: 3.25,
       spiritStoneBonus: 0.18
     }
@@ -136,6 +144,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 74,
       defense: 44,
       maxHp: 550,
+      speed: 20,
       cultivationSpeed: 4,
       spiritStoneBonus: 0.23
     }
@@ -150,6 +159,7 @@ export const REALMS: RealmDefinition[] = [
       attack: 105,
       defense: 66,
       maxHp: 820,
+      speed: 24,
       cultivationSpeed: 5.5,
       spiritStoneBonus: 0.35
     }

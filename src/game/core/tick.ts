@@ -1,14 +1,13 @@
 import type { GameSaveData } from "../types";
 import { EQUIPMENT_TEMPLATES, ITEMS } from "../config";
 import { applyCultivationGain } from "./cultivation";
-import { resolveBattleRound } from "./combat";
+import { advanceBattleTime, resolveBattleRound } from "./combat";
 import { applyLootToSave } from "./inventory";
 import { generateLoot, type LootResult } from "./loot";
 import { createId } from "./random";
 
 const MAX_TICK_SECONDS = 10;
-const BATTLE_INTERVAL_MS = 1000;
-const MAX_ROUNDS_PER_TICK = 3;
+const MAX_ATTACK_EVENTS_PER_TICK = 5;
 
 function appendLog(
   save: GameSaveData,
@@ -68,13 +67,9 @@ function resolveAutoBattleRounds(
 
   const lastAttackAt =
     save.autoBattle.lastAttackAt ?? save.autoBattle.battleStartedAt ?? fallbackLastAttackAt;
-  const elapsedBattleMs = now - lastAttackAt;
-  const roundCount = Math.min(
-    MAX_ROUNDS_PER_TICK,
-    Math.max(0, Math.floor(elapsedBattleMs / BATTLE_INTERVAL_MS))
-  );
+  const elapsedBattleSeconds = Math.max(0, (now - lastAttackAt) / 1000);
 
-  if (roundCount <= 0) {
+  if (elapsedBattleSeconds <= 0) {
     return {
       ...save,
       autoBattle: {
@@ -84,15 +79,24 @@ function resolveAutoBattleRounds(
     };
   }
 
-  let nextSave = save;
+  const advanced = advanceBattleTime(save, Math.min(elapsedBattleSeconds, MAX_TICK_SECONDS), now);
+  let nextSave = advanced.save;
 
-  for (let index = 0; index < roundCount; index += 1) {
-    const roundTime = Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * (index + 1));
+  if (advanced.summary?.type === "recovered") {
+    nextSave = appendLog(nextSave, "battle", advanced.summary.message, now);
+  }
+
+  for (let index = 0; index < MAX_ATTACK_EVENTS_PER_TICK; index += 1) {
+    const roundTime = now;
     const result = resolveBattleRound(nextSave, roundTime);
 
     nextSave = result.save;
 
-    if (result.summary.type === "player_attack") {
+    if (result.summary.type === "none" || result.summary.type === "recovering") {
+      break;
+    }
+
+    if (result.summary.type === "player_attack" || result.summary.type === "enemy_attack") {
       nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
     }
 
@@ -115,6 +119,7 @@ function resolveAutoBattleRounds(
         autoBattle: {
           ...nextSave.autoBattle,
           currentEnemy: undefined,
+          enemyActionProgress: 0,
           defeatedCount: nextSave.autoBattle.defeatedCount + 1
         }
       };
@@ -130,7 +135,7 @@ function resolveAutoBattleRounds(
     autoBattle: {
       ...nextSave.autoBattle,
       battleStartedAt: nextSave.autoBattle.battleStartedAt ?? now,
-      lastAttackAt: Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * roundCount)
+      lastAttackAt: now
     }
   };
 }

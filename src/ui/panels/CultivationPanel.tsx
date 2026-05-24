@@ -10,7 +10,7 @@ import { ProgressBar } from "../components/ProgressBar";
 import { StatBlock } from "../components/StatBlock";
 
 function formatNumber(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 export function CultivationPanel({ save }: { save: GameSaveData }) {
@@ -29,20 +29,25 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
         <h2>修为进境</h2>
       </div>
 
-      <ProgressBar value={progress} />
+      <div className="cultivation-status-row">
+        <strong>
+          {isMaxRealm ? "已达最高境界" : breakthroughAvailable ? "可突破" : "修炼中"}
+        </strong>
+        <span>
+          {formatNumber(save.player.cultivation.currentCultivation)} / {formatNumber(required)}
+        </span>
+      </div>
 
-      <p className="panel-description">
-        {isMaxRealm
-          ? "已至当前版本最高境界。"
-          : `距离${nextRealm.name}还需 ${formatNumber(
-              Math.max(0, required - save.player.cultivation.currentCultivation)
-            )} 修为。`}
-      </p>
+      <ProgressBar value={Math.min(1, progress)} />
 
-      <div className="summary-row">
+      <div className="cultivation-metrics">
         <StatBlock
-          label="当前修为"
-          value={`${formatNumber(save.player.cultivation.currentCultivation)} / ${formatNumber(required)}`}
+          label="还需"
+          value={
+            isMaxRealm
+              ? "0"
+              : formatNumber(Math.max(0, required - save.player.cultivation.currentCultivation))
+          }
         />
         <StatBlock label="突破所需" value={formatNumber(required)} />
         <StatBlock label="每秒修为" value={`${formatNumber(gainPerSecond)} / 秒`} />
