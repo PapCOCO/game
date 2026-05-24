@@ -1,144 +1,94 @@
-import type { EquipmentInstance, EquipmentSlot, GameSaveData, ItemStack } from "../../game/types";
+import { useState } from "react";
+import type { GameSaveData, ItemStack, ItemType } from "../../game/types";
 import { ITEMS } from "../../game/config";
-import { calculateEquipmentScore, formatEquipmentStats } from "../../game/core/equipment";
-import { useGameStore } from "../../game/state/gameStore";
 
-const SLOT_LABELS: Record<EquipmentSlot, string> = {
-  weapon: "武器",
-  armor: "护甲",
-  amulet: "护符",
-  ring: "戒指"
+type InventoryTab = "materials" | "consumables" | "currencies";
+
+const TAB_LABELS: Record<InventoryTab, string> = {
+  materials: "材料",
+  consumables: "丹药",
+  currencies: "杂项"
+};
+
+const ITEM_TYPE_LABELS: Record<ItemType, string> = {
+  material: "材料",
+  consumable: "丹药",
+  currency: "杂项"
 };
 
 function getItemDefinition(itemId: string) {
   return ITEMS.find((item) => item.id === itemId);
 }
 
-function renderStacks(stacks: ItemStack[], emptyText: string) {
-  if (stacks.length === 0) {
-    return <p className="muted-text">{emptyText}</p>;
+function getStacks(save: GameSaveData, tab: InventoryTab): ItemStack[] {
+  if (tab === "materials") {
+    return save.inventory.materials;
   }
 
-  return (
-    <div className="inventory-list">
-      {stacks.map((stack) => {
-        const item = getItemDefinition(stack.itemId);
-
-        return (
-          <div className={`inventory-row rarity-${item?.rarity ?? "common"}`} key={stack.itemId}>
-            <div>
-              <strong>{item?.name ?? stack.itemId}</strong>
-              <small>{item?.rarity ?? "未知品质"}</small>
-            </div>
-            <strong>x{stack.quantity}</strong>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function EquipmentRow({
-  equipment,
-  isEquipped
-}: {
-  equipment: EquipmentInstance;
-  isEquipped: boolean;
-}) {
-  const { discardEquipment, equipItemNow } = useGameStore();
-
-  return (
-    <div className={`equipment-item rarity-${equipment.rarity}`}>
-      <div className="equipment-header">
-        <strong>{equipment.name}</strong>
-        <span>
-          {SLOT_LABELS[equipment.slot]} · {equipment.rarity}
-        </span>
-      </div>
-
-      <div className="equipment-meta-row">
-        <small>评分 {calculateEquipmentScore(equipment).toFixed(1)}</small>
-        <small>{isEquipped ? "已穿戴" : "背包中"}</small>
-      </div>
-
-      <p>{formatEquipmentStats(equipment)}</p>
-      <small>
-        {equipment.affixes.length > 0
-          ? `词条：${equipment.affixes.map((affix) => affix.name).join("、")}`
-          : "词条：无"}
-      </small>
-
-      <div className="equipment-actions">
-        <button
-          className="primary-button compact-button"
-          disabled={isEquipped}
-          type="button"
-          onClick={() => void equipItemNow(equipment.instanceId)}
-        >
-          {isEquipped ? "已装备" : "装备"}
-        </button>
-        <button
-          className="secondary-button compact-button"
-          disabled={isEquipped}
-          type="button"
-          onClick={() => void discardEquipment(equipment.instanceId)}
-        >
-          丢弃
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function renderEquipments(save: GameSaveData) {
-  if (save.inventory.equipments.length === 0) {
-    return <p className="muted-text">暂无装备。</p>;
+  if (tab === "consumables") {
+    return save.inventory.consumables;
   }
 
-  const equippedIds = new Set(Object.values(save.player.equipped));
-
-  return (
-    <div className="equipment-list inventory-equipment-list">
-      {save.inventory.equipments.map((equipment) => (
-        <EquipmentRow
-          equipment={equipment}
-          isEquipped={equippedIds.has(equipment.instanceId)}
-          key={equipment.instanceId}
-        />
-      ))}
-    </div>
-  );
+  return save.inventory.currencies;
 }
 
 export function InventoryPanel({ save }: { save: GameSaveData }) {
+  const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
+  const stacks = getStacks(save, activeTab);
+
   return (
-    <section className="panel inventory-panel">
+    <section className="panel inventory-panel text-panel">
       <div className="panel-heading">
-        <span className="eyebrow">Inventory</span>
+        <span className="eyebrow">行囊</span>
         <h2>背包</h2>
       </div>
 
-      <div className="inventory-scroll">
-        <div className="inventory-section">
-          <h3>灵石</h3>
-          <strong className="spirit-stone-count">{save.player.spiritStones}</strong>
+      <div className="tab-row" role="tablist" aria-label="背包分类">
+        {(Object.keys(TAB_LABELS) as InventoryTab[]).map((tab) => (
+          <button
+            className={tab === activeTab ? "tab-button tab-button-active" : "tab-button"}
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+          >
+            {TAB_LABELS[tab]}
+          </button>
+        ))}
+      </div>
+
+      <div className="inventory-list-shell">
+        <div className="inventory-ledger">
+          <span>灵石</span>
+          <strong>{save.player.spiritStones}</strong>
         </div>
 
-        <div className="inventory-section">
-          <h3>材料</h3>
-          {renderStacks(save.inventory.materials, "暂无材料。")}
-        </div>
+        <div className="inventory-compact-list" aria-label="物品列表">
+          {stacks.length === 0 ? (
+            <p className="muted-text">此类物品尚无收获。</p>
+          ) : (
+            stacks.map((stack) => {
+              const item = getItemDefinition(stack.itemId);
 
-        <div className="inventory-section">
-          <h3>消耗品</h3>
-          {renderStacks(save.inventory.consumables, "暂无消耗品。")}
-        </div>
-
-        <div className="inventory-section">
-          <h3>
-            装备 {save.inventory.equipments.length}/{save.inventory.maxEquipmentCount}
-          </h3>
-          {renderEquipments(save)}
+              return (
+                <button
+                  className="inventory-compact-row"
+                  key={stack.itemId}
+                  type="button"
+                >
+                  <span className="inventory-item-name">{item?.name ?? stack.itemId}</span>
+                  <span className="inventory-item-meta">{item?.rarity ?? "未知"} · x{stack.quantity}</span>
+                  <div className="item-hover-detail" role="tooltip">
+                    <strong>{item?.name ?? stack.itemId}</strong>
+                    <span>
+                      {item === undefined ? "未知" : `${ITEM_TYPE_LABELS[item.type]} · ${item.rarity}`}
+                    </span>
+                    <span>数量：{stack.quantity}</span>
+                    <p>{item?.description ?? "无描述。"}</p>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
     </section>

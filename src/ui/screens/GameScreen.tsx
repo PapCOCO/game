@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useGameStore } from "../../game/state/gameStore";
 import { getCurrentMap, getCurrentRealm, getPlayerPower } from "../../game/core/selectors";
+import { canBreakthrough } from "../../game/core/cultivation";
 import { CharacterPanel } from "../panels/CharacterPanel";
 import { CombatPanel } from "../panels/CombatPanel";
 import { CultivationPanel } from "../panels/CultivationPanel";
@@ -12,7 +13,7 @@ import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
 
 export function GameScreen() {
-  const { noticeMessage, save, saveNow } = useGameStore();
+  const { breakthroughNow, noticeMessage, save, saveNow, toggleAutoBattleNow } = useGameStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -26,6 +27,7 @@ export function GameScreen() {
   const currentRealm = getCurrentRealm(save);
   const currentMap = getCurrentMap(save);
   const playerPower = getPlayerPower(save);
+  const breakthroughReady = canBreakthrough(save);
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((current) => !current);
   }, []);
@@ -46,8 +48,8 @@ export function GameScreen() {
     <main className="app-shell game-shell">
       <header className="game-topbar">
         <div className="topbar-title">
-          <h1>修仙挂机 MVP Plus</h1>
-          <span>{save.meta.slotId}</span>
+          <h1>修仙挂机录</h1>
+          <span>存档 {save.meta.slotId}</span>
         </div>
 
         <div className="topbar-meta" aria-label="角色概要">
@@ -76,34 +78,47 @@ export function GameScreen() {
             <strong>{save.autoBattle.enabled ? "开启" : "暂停"}</strong>
           </div>
         </div>
-
-        <div className="save-controls">
-          {noticeMessage !== undefined ? <span>{noticeMessage}</span> : null}
-          <button className="secondary-button" type="button" onClick={toggleMenu}>
-            菜单 / Esc
-          </button>
-          <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSaveNow}>
-            {isSaving ? "保存中..." : "手动保存"}
-          </button>
-        </div>
       </header>
 
-      <div className="desktop-layout">
-        <div className="game-column left-column">
+      <div className="game-main">
+        <aside className="game-column left-column">
           <CharacterPanel save={save} />
           <CultivationPanel save={save} />
           <MapPanel save={save} />
-        </div>
+        </aside>
 
-        <div className="game-column center-column">
+        <section className="game-column center-column" aria-label="主文本区域">
           <CombatPanel save={save} />
-        </div>
+        </section>
 
-        <div className="game-column right-column">
+        <aside className="game-column right-column">
           <EquipmentPanel save={save} />
           <InventoryPanel save={save} />
-        </div>
+        </aside>
       </div>
+
+      <footer className="action-bar">
+        <p>{noticeMessage ?? "山中无岁月，灵气自周天缓缓流转。"}</p>
+        <div className="action-buttons">
+          <button
+            className="primary-button"
+            disabled={!breakthroughReady}
+            type="button"
+            onClick={() => void breakthroughNow()}
+          >
+            突破
+          </button>
+          <button className="secondary-button" type="button" onClick={() => void toggleAutoBattleNow()}>
+            {save.autoBattle.enabled ? "暂停历练" : "继续历练"}
+          </button>
+          <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSaveNow}>
+            {isSaving ? "保存中..." : "存档"}
+          </button>
+          <button className="secondary-button" type="button" onClick={toggleMenu}>
+            菜单 / Esc
+          </button>
+        </div>
+      </footer>
 
       <EscapeMenu
         isOpen={isMenuOpen}
