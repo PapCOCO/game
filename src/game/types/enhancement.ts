@@ -1,3 +1,5 @@
+import type { GameSaveData } from "./save";
+
 export interface EnhancementConfig {
   level: number;
   successRate: number;
@@ -10,6 +12,7 @@ export interface EnhancementConfig {
 }
 
 export interface EnhancementResult {
+  save: GameSaveData;
   success: boolean;
   newLevel: number;
   message: string;

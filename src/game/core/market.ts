@@ -100,12 +100,12 @@ export function sellItem(save: GameSaveData, itemId: string, quantity = 1): Sell
     return { save, success: false, message: "物品不存在。" };
   }
 
-  if (itemDef.category !== "material" && itemDef.category !== "consumable") {
+  if (itemDef.type !== "material" && itemDef.type !== "consumable") {
     return { save, success: false, message: "该物品无法出售。" };
   }
 
   const inventoryItem =
-    itemDef.category === "material"
+    itemDef.type === "material"
       ? save.inventory.materials.find((item) => item.itemId === itemId)
       : save.inventory.consumables.find((item) => item.itemId === itemId);
 
@@ -119,7 +119,7 @@ export function sellItem(save: GameSaveData, itemId: string, quantity = 1): Sell
 
   let nextInventory = { ...save.inventory };
 
-  if (itemDef.category === "material") {
+  if (itemDef.type === "material") {
     const newQuantity = inventoryItem.quantity - quantity;
 
     if (newQuantity <= 0) {

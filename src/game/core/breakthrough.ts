@@ -1,7 +1,7 @@
 import type { GameLogEntry, GameSaveData, RealmDefinition } from "../types";
 import { MAPS, REALMS } from "../config";
 import { createId, randomChance } from "./random";
-import { getUnlockedMapIdsByRealm } from "./mapUnlock";
+import { getUnlockedMapIds } from "./mapUnlock";
 import { calculateFinalStats, getCultivationRequired, getCurrentRealm } from "./selectors";
 
 function appendLog(save: GameSaveData, entry: GameLogEntry): GameLogEntry[] {
@@ -104,16 +104,12 @@ export function breakthrough(
     };
   }
 
-  const unlockedMapIds = getUnlockedMapIdsByRealm(nextRealm.id);
-  const currentMapId = unlockedMapIds.includes(save.map.currentMapId)
-    ? save.map.currentMapId
-    : getFirstUnlockedMapId(unlockedMapIds);
   const cultivationAfterBreakthrough =
     save.player.cultivation.currentCultivation - requiredCultivation;
 
   const nextLevel = save.player.level + 1;
 
-  const nextSave: GameSaveData = {
+  const progressedSave: GameSaveData = {
     ...save,
     meta: {
       ...save.meta,
@@ -133,14 +129,23 @@ export function breakthrough(
         ...save.player.progress,
         level: nextLevel,
         realmId: nextRealm.id,
-        unlockedMapIds,
-        currentMapId
+        unlockedMapIds: [
+          ...new Set([
+            ...save.player.progress.unlockedMapIds,
+            ...save.map.unlockedMapIds
+          ])
+        ],
+        currentMapId: save.map.currentMapId
       }
     },
     map: {
       ...save.map,
-      currentMapId,
-      unlockedMapIds
+      unlockedMapIds: [
+        ...new Set([
+          ...save.player.progress.unlockedMapIds,
+          ...save.map.unlockedMapIds
+        ])
+      ]
     },
     logs: {
       ...save.logs,
@@ -162,6 +167,27 @@ export function breakthrough(
         updatedAt: now,
         lastActiveAt: now
       }
+    }
+  };
+
+  const unlockedMapIds = getUnlockedMapIds(progressedSave);
+  const currentMapId = unlockedMapIds.includes(save.map.currentMapId)
+    ? save.map.currentMapId
+    : getFirstUnlockedMapId(unlockedMapIds);
+  const nextSave: GameSaveData = {
+    ...progressedSave,
+    player: {
+      ...progressedSave.player,
+      progress: {
+        ...progressedSave.player.progress,
+        unlockedMapIds,
+        currentMapId
+      }
+    },
+    map: {
+      ...progressedSave.map,
+      currentMapId,
+      unlockedMapIds
     }
   };
 

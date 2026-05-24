@@ -1,11 +1,25 @@
 import type { GameSaveData } from "../types";
 import { EMPTY_CORE_STATS } from "../types";
-import { MONSTERS } from "../config";
+import { MAPS, MONSTERS } from "../config";
 import { calculateFinalStats } from "../core/selectors";
+import { getUnlockedMapIds } from "../core/mapUnlock";
 import { CURRENT_SAVE_VERSION } from "./saveVersion";
 import { validateSaveData } from "./validateSave";
 import { createInitialEstateState } from "../core/estate";
 import { normalizeTechniqueState } from "../core/technique";
+
+function getFirstUnlockedMapId(unlockedMapIds: string[]): string {
+  const unlockedSet = new Set(unlockedMapIds);
+
+  return (
+    MAPS.filter((map) => unlockedSet.has(map.id)).sort(
+      (first, second) => first.order - second.order
+    )[0]?.id ??
+    [...MAPS].sort((first, second) => first.order - second.order)[0]?.id ??
+    unlockedMapIds[0] ??
+    ""
+  );
+}
 
 export function migrateSaveData(input: unknown): GameSaveData | null {
   if (!validateSaveData(input)) {
@@ -195,29 +209,49 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     techniques: normalizeTechniqueState(input.techniques)
   };
 
-  const recalculatedStats = calculateFinalStats(normalizedSave);
+  const unlockedMapIds = getUnlockedMapIds(normalizedSave);
+  const currentMapId = unlockedMapIds.includes(normalizedSave.map.currentMapId)
+    ? normalizedSave.map.currentMapId
+    : getFirstUnlockedMapId(unlockedMapIds);
+  const saveWithUnlockedMaps: GameSaveData = {
+    ...normalizedSave,
+    player: {
+      ...normalizedSave.player,
+      progress: {
+        ...normalizedSave.player.progress,
+        unlockedMapIds,
+        currentMapId
+      }
+    },
+    map: {
+      ...normalizedSave.map,
+      currentMapId,
+      unlockedMapIds
+    }
+  };
+  const recalculatedStats = calculateFinalStats(saveWithUnlockedMaps);
   const recoveringUntil = normalizedSave.autoBattle.recoveringUntil;
   const isRecovering = recoveringUntil !== undefined && recoveringUntil > now;
   const playerCurrentHp =
-    normalizedSave.autoBattle.playerCurrentHp === undefined ||
-    (!isRecovering && normalizedSave.autoBattle.playerCurrentHp <= 0)
+    saveWithUnlockedMaps.autoBattle.playerCurrentHp === undefined ||
+    (!isRecovering && saveWithUnlockedMaps.autoBattle.playerCurrentHp <= 0)
       ? recalculatedStats.maxHp
       : Math.min(
-          Math.max(0, normalizedSave.autoBattle.playerCurrentHp),
+          Math.max(0, saveWithUnlockedMaps.autoBattle.playerCurrentHp),
           Math.max(1, recalculatedStats.maxHp)
         );
 
   return {
-    ...normalizedSave,
+    ...saveWithUnlockedMaps,
     player: {
-      ...normalizedSave.player,
+      ...saveWithUnlockedMaps.player,
       finalStats: recalculatedStats
     },
     autoBattle: {
-      ...normalizedSave.autoBattle,
+      ...saveWithUnlockedMaps.autoBattle,
       playerCurrentHp,
-      playerActionProgress: normalizedSave.autoBattle.playerActionProgress ?? 0,
-      enemyActionProgress: normalizedSave.autoBattle.enemyActionProgress ?? 0
+      playerActionProgress: saveWithUnlockedMaps.autoBattle.playerActionProgress ?? 0,
+      enemyActionProgress: saveWithUnlockedMaps.autoBattle.enemyActionProgress ?? 0
     }
   };
 }

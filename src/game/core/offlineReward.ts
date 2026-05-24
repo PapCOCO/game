@@ -4,7 +4,7 @@ import { calculateFinalStats } from "./selectors";
 import { pickWeighted } from "./random";
 import { MAPS, MONSTERS } from "../config";
 import { generateLoot } from "./loot";
-import { applyLootToSave, addEquipments } from "./inventory";
+import { addEquipments, addItemStacks } from "./inventory";
 
 const OFFLINE_BATTLE_EFFICIENCY = 0.6;
 const OFFLINE_CULTIVATION_EFFICIENCY = 0.5;
@@ -123,13 +123,17 @@ export function calculateOfflineReward(
     }
   }
 
+  const finalStats = calculateFinalStats(save);
+  const adjustedSpiritStonesGained = Math.floor(
+    spiritStonesGained * (1 + finalStats.spiritStoneBonus)
+  );
   const equipmentGained = equipmentInstances.map((eq) => eq.instanceId);
 
   const summary: OfflineRewardSummary = {
     offlineDurationMs,
     cappedDurationMs,
     cultivationGained,
-    spiritStonesGained,
+    spiritStonesGained: adjustedSpiritStonesGained,
     itemsGained,
     equipmentGained
   };
@@ -155,24 +159,18 @@ export function calculateOfflineReward(
     }
   };
 
-  if (spiritStonesGained > 0) {
+  if (adjustedSpiritStonesGained > 0) {
     nextSave = {
       ...nextSave,
       player: {
         ...nextSave.player,
-        spiritStones: nextSave.player.spiritStones + spiritStonesGained
+        spiritStones: nextSave.player.spiritStones + adjustedSpiritStonesGained
       }
     };
   }
 
   if (itemsGained.length > 0) {
-    const mockLoot = {
-      spiritStones: 0,
-      cultivation: 0,
-      items: itemsGained,
-      equipments: []
-    };
-    nextSave = applyLootToSave(nextSave, mockLoot, now);
+    nextSave = addItemStacks(nextSave, itemsGained);
   }
 
   if (equipmentInstances.length > 0) {

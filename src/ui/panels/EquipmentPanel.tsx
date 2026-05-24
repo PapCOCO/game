@@ -19,6 +19,12 @@ function getItemName(itemId: string): string {
   return ITEMS.find((item) => item.id === itemId)?.name ?? itemId;
 }
 
+function getPrimaryStats(equipmentStats: string): string {
+  const parts = equipmentStats.split("、").slice(0, 2);
+
+  return parts.length > 0 ? parts.join("、") : "无属性";
+}
+
 export function EquipmentPanel({ save }: { save: GameSaveData }) {
   const { unequipSlotNow, enhanceEquipmentNow } = useGameStore();
   const equippedEquipment = getEquippedEquipment(save);
@@ -35,6 +41,20 @@ export function EquipmentPanel({ save }: { save: GameSaveData }) {
           const equipment = equippedEquipment[slot];
           const enhancement = equipment?.enhancement ?? 0;
           const canEnhanceThis = equipment !== undefined ? canEnhance(save, equipment.instanceId) : { can: false, reason: "" };
+          const enhancementConfig =
+            equipment !== undefined && enhancement < MAX_ENHANCEMENT_LEVEL
+              ? ENHANCEMENT_CONFIG[enhancement]
+              : undefined;
+          const enhancementTitle =
+            enhancementConfig === undefined
+              ? canEnhanceThis.reason
+              : [
+                  `${enhancementConfig.spiritStoneCost} 灵石`,
+                  ...enhancementConfig.materials.map(
+                    (material) => `${getItemName(material.itemId)} x${material.quantity}`
+                  ),
+                  `${(enhancementConfig.successRate * 100).toFixed(0)}% 成功率`
+                ].join(" · ");
 
           return (
             <div className="equipped-slot-card" key={slot}>
@@ -57,22 +77,15 @@ export function EquipmentPanel({ save }: { save: GameSaveData }) {
               {equipment === undefined ? (
                 <p className="muted-text">未穿戴。</p>
               ) : (
-                <div>
-                  <p>
-                    评分 {calculateEquipmentScore(equipment).toFixed(0)} · {formatEquipmentStats(equipment)}
-                  </p>
+                <div className="equipped-slot-summary">
+                  <p>评分 {calculateEquipmentScore(equipment).toFixed(0)}</p>
+                  <p>{getPrimaryStats(formatEquipmentStats(equipment))}</p>
                   {enhancement < MAX_ENHANCEMENT_LEVEL && (
-                    <div style={{ marginTop: "8px" }}>
-                      <div style={{ fontSize: "11px", color: "#879084", marginBottom: "4px" }}>
-                        强化 +{enhancement + 1}: {ENHANCEMENT_CONFIG[enhancement].spiritStoneCost} 灵石
-                        {ENHANCEMENT_CONFIG[enhancement].materials.map((m) => ` · ${m.quantity} ${getItemName(m.itemId)}`).join("")}
-                        <span style={{ color: canEnhanceThis.can ? "#7fb3a0" : "#b95c4a" }}>
-                          {" "}({(ENHANCEMENT_CONFIG[enhancement].successRate * 100).toFixed(0)}% 成功率)
-                        </span>
-                      </div>
+                    <div className="equipped-slot-actions">
                       <button
                         className="text-button"
                         disabled={!canEnhanceThis.can}
+                        title={enhancementTitle}
                         type="button"
                         onClick={() => void enhanceEquipmentNow(equipment.instanceId)}
                       >

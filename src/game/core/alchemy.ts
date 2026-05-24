@@ -57,13 +57,7 @@ function getAlchemyExpGain(baseExp: number, furnaceLevel: number): number {
 }
 
 function appendLog(save: GameSaveData, entry: GameLogEntry): GameLogEntry[] {
-  const entries = [...save.logs.entries, entry];
-
-  if (entries.length > save.logs.maxEntries) {
-    entries.shift();
-  }
-
-  return entries;
+  return [entry, ...save.logs.entries].slice(0, save.logs.maxEntries);
 }
 
 export interface AlchemyResult {

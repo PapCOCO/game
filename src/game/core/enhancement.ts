@@ -1,9 +1,9 @@
-import type { CoreStats, EnhancementResult, GameSaveData } from "../types";
+import type { EnhancementResult, GameSaveData } from "../types";
 import { ENHANCEMENT_CONFIG, MAX_ENHANCEMENT_LEVEL } from "../config";
 import { randomChance } from "./random";
 import { getEquipmentByInstanceId, calculateFinalStats } from "./selectors";
-import { appendEquipmentLog, touchSave } from "./equipment";
-import { removeItem, addItem } from "./inventory";
+import { removeItem } from "./inventory";
+import { appendLog, touchSave } from "./saveUtils";
 
 function hasEnoughMaterials(save: GameSaveData, targetLevel: number): boolean {
   const config = ENHANCEMENT_CONFIG[targetLevel - 1];
@@ -24,11 +24,16 @@ function hasEnoughMaterials(save: GameSaveData, targetLevel: number): boolean {
 }
 
 function consumeMaterials(save: GameSaveData, targetLevel: number): GameSaveData {
-  let newSave = { ...save };
   const config = ENHANCEMENT_CONFIG[targetLevel - 1];
-  if (config === undefined) return newSave;
+  if (config === undefined) return save;
 
-  newSave.player.spiritStones -= config.spiritStoneCost;
+  let newSave: GameSaveData = {
+    ...save,
+    player: {
+      ...save.player,
+      spiritStones: save.player.spiritStones - config.spiritStoneCost
+    }
+  };
 
   for (const mat of config.materials) {
     newSave = removeItem(newSave, mat.itemId, mat.quantity);
@@ -41,42 +46,57 @@ export function enhanceEquipment(
   save: GameSaveData,
   equipmentInstanceId: string,
   now = Date.now()
-): GameSaveData {
+): EnhancementResult {
   const equipment = getEquipmentByInstanceId(save, equipmentInstanceId);
   if (equipment === undefined) {
-    return save;
+    return { save, success: false, newLevel: 0, message: "装备不存在。" };
   }
 
-  if (equipment.enhancement >= MAX_ENHANCEMENT_LEVEL) {
-    return appendEquipmentLog(save, `${equipment.name}已达到强化上限。`, now);
+  const currentLevel = equipment.enhancement ?? 0;
+
+  if (currentLevel >= MAX_ENHANCEMENT_LEVEL) {
+    const message = `${equipment.name}已达到强化上限。`;
+    return {
+      save: appendLog(save, "equipment", message, now),
+      success: false,
+      newLevel: currentLevel,
+      message
+    };
   }
 
-  const targetLevel = equipment.enhancement + 1;
+  const targetLevel = currentLevel + 1;
 
   if (!hasEnoughMaterials(save, targetLevel)) {
-    return appendEquipmentLog(save, `材料不足，无法强化${equipment.name}。`, now);
+    const message = `材料不足，无法强化${equipment.name}。`;
+    return {
+      save: appendLog(save, "equipment", message, now),
+      success: false,
+      newLevel: currentLevel,
+      message
+    };
   }
 
   const config = ENHANCEMENT_CONFIG[targetLevel - 1];
   if (config === undefined) {
-    return save;
+    return { save, success: false, newLevel: currentLevel, message: "强化配置不存在。" };
   }
 
   let newSave = consumeMaterials(save, targetLevel);
   const success = randomChance(config.successRate);
+  const message = success
+    ? `${equipment.name}强化成功！达到+${targetLevel}。`
+    : `${equipment.name}强化失败，材料与灵石已消耗。`;
 
   if (success) {
     const equipments = newSave.inventory.equipments.map((eq) =>
       eq.instanceId === equipmentInstanceId
-        ? { ...eq, enhancement: eq.enhancement + 1 }
+        ? { ...eq, enhancement: (eq.enhancement ?? 0) + 1 }
         : eq
     );
     newSave = { ...newSave, inventory: { ...newSave.inventory, equipments } };
-    newSave = appendEquipmentLog(newSave, `${equipment.name}强化成功！达到+${targetLevel}。`, now);
-  } else {
-    newSave = appendEquipmentLog(newSave, `${equipment.name}强化失败……`, now);
   }
 
+  newSave = appendLog(newSave, "equipment", message, now);
   newSave = touchSave(newSave, now);
   newSave = {
     ...newSave,
@@ -86,24 +106,12 @@ export function enhanceEquipment(
     }
   };
 
-  return newSave;
-}
-
-export function getEnhancementStats(
-  baseStats: Partial<CoreStats>,
-  enhancement: number
-): Partial<CoreStats> {
-  if (enhancement <= 0) return baseStats;
-
-  const config = ENHANCEMENT_CONFIG[enhancement - 1];
-  if (config === undefined) return baseStats;
-
-  const result: Partial<CoreStats> = {};
-  for (const [stat, value] of Object.entries(baseStats) as Array<[keyof CoreStats, number]>) {
-    result[stat] = Math.round(value * config.attributeMultiplier * 100) / 100;
-  }
-
-  return result;
+  return {
+    save: newSave,
+    success,
+    newLevel: success ? targetLevel : currentLevel,
+    message
+  };
 }
 
 export function canEnhance(

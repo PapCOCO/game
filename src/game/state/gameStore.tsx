@@ -12,7 +12,7 @@ import type { EquipmentSlot, GameLogEntry, GameLogType, GameSaveData } from "../
 import { createNewGame } from "../core/createNewGame";
 import { breakthrough } from "../core/breakthrough";
 import { tickGame } from "../core/tick";
-import { isMapUnlocked } from "../core/mapUnlock";
+import { isMapUnlockedForSave } from "../core/mapUnlock";
 import { MAPS } from "../config";
 import { createId } from "../core/random";
 import {
@@ -272,7 +272,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       const targetMap = MAPS.find((map) => map.id === mapId);
 
-      if (targetMap === undefined || !isMapUnlocked(mapId, state.save.player.realmId)) {
+      if (targetMap === undefined || !isMapUnlockedForSave(state.save, mapId)) {
         setState({
           ...state,
           noticeMessage: "该地图尚未解锁。"
@@ -852,21 +852,23 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const nextSave = enhanceEquipment(state.save, instanceId);
+    const result = enhanceEquipment(state.save, instanceId);
 
     setState({
-      save: nextSave,
+      save: result.save,
       status: "ready",
+      noticeMessage: result.message,
       offlineReward: null
     });
 
     try {
-      await saveGameSave(nextSave);
+      await saveGameSave(result.save);
     } catch (error) {
       setState({
-        save: nextSave,
+        save: result.save,
         status: "error",
         errorMessage: error instanceof Error ? error.message : "强化后保存失败",
+        noticeMessage: result.message,
         offlineReward: null
       });
     }

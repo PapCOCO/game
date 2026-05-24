@@ -3,7 +3,7 @@ import { EMPTY_CORE_STATS } from "../types";
 import { MAPS, REALMS } from "../config";
 import { CURRENT_SAVE_VERSION } from "../save/saveVersion";
 import { createId } from "./random";
-import { getUnlockedMapIdsByRealm } from "./mapUnlock";
+import { getUnlockedMapIds } from "./mapUnlock";
 import { calculateFinalStats } from "./selectors";
 import { createInitialEstateState } from "./estate";
 import { createInitialTechniqueState } from "./technique";
@@ -18,9 +18,9 @@ function getFirstRealm(): RealmDefinition {
   return firstRealm;
 }
 
-function getFirstUnlockedMap(realmId: string): MapDefinition {
-  const unlockedMapIds = new Set(getUnlockedMapIdsByRealm(realmId));
-  const firstMap = MAPS.filter((map) => unlockedMapIds.has(map.id)).sort(
+function getFirstUnlockedMap(unlockedMapIds: string[]): MapDefinition {
+  const unlockedSet = new Set(unlockedMapIds);
+  const firstMap = MAPS.filter((map) => unlockedSet.has(map.id)).sort(
     (first, second) => first.order - second.order
   )[0];
 
@@ -34,10 +34,8 @@ function getFirstUnlockedMap(realmId: string): MapDefinition {
 export function createNewGame(characterName: string, now = Date.now()): GameSaveData {
   const playerName = characterName.trim() || "无名修士";
   const initialRealm = getFirstRealm();
-  const initialMap = getFirstUnlockedMap(initialRealm.id);
-  const unlockedMapIds = getUnlockedMapIdsByRealm(initialRealm.id);
 
-  const save: GameSaveData = {
+  let save: GameSaveData = {
     version: CURRENT_SAVE_VERSION,
     meta: {
       version: CURRENT_SAVE_VERSION,
@@ -67,8 +65,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
       progress: {
         level: 1,
         realmId: initialRealm.id,
-        unlockedMapIds,
-        currentMapId: initialMap.id,
+        unlockedMapIds: [],
+        currentMapId: "",
         defeatedMonsterIds: []
       }
     },
@@ -80,8 +78,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
       maxEquipmentCount: 100
     },
     map: {
-      currentMapId: initialMap.id,
-      unlockedMapIds,
+      currentMapId: "",
+      unlockedMapIds: [],
       encounter: {
         lastSearchedAt: now - 5 * 60 * 1000,
         totalEncounters: 0
@@ -128,6 +126,26 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
     },
     estate: createInitialEstateState(),
     techniques: createInitialTechniqueState()
+  };
+
+  const unlockedMapIds = getUnlockedMapIds(save);
+  const initialMap = getFirstUnlockedMap(unlockedMapIds);
+
+  save = {
+    ...save,
+    player: {
+      ...save.player,
+      progress: {
+        ...save.player.progress,
+        unlockedMapIds,
+        currentMapId: initialMap.id
+      }
+    },
+    map: {
+      ...save.map,
+      currentMapId: initialMap.id,
+      unlockedMapIds
+    }
   };
 
   save.player.finalStats = calculateFinalStats(save);

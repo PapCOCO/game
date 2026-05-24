@@ -11,9 +11,9 @@ import type {
 } from "../types";
 import { EMPTY_CORE_STATS } from "../types";
 import { MAPS, REALMS } from "../config";
-import { getUnlockedMapIdsByRealm } from "./mapUnlock";
+import { getUnlockedMapIds } from "./mapUnlock";
 import { getLearnedTechniques } from "./technique";
-import { getEnhancementStats } from "./enhancement";
+import { getEnhancementStats } from "./enhancementStats";
 
 const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
@@ -168,7 +168,7 @@ export function getPlayerPower(save: GameSaveData): number {
 }
 
 export function getUnlockedMaps(save: GameSaveData): MapDefinition[] {
-  const unlockedMapIds = new Set(getUnlockedMapIdsByRealm(save.player.realmId));
+  const unlockedMapIds = new Set(getUnlockedMapIds(save));
 
   return MAPS.filter((map) => unlockedMapIds.has(map.id)).sort(
     (first, second) => first.order - second.order

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { GameSaveData } from "../../game/types";
 import { ITEMS } from "../../game/config/items";
-import { SELL_PRICE_RATIO } from "../../game/config/market";
+import { MARKET_ITEMS, SELL_PRICE_RATIO } from "../../game/config/market";
 import { useGameStore } from "../../game/state/gameStore";
 
 type MarketTab = "buy" | "sell";
@@ -41,18 +41,19 @@ export function MarketPanel({ save }: { save: GameSaveData }) {
 
   const sellableMaterials = save.inventory.materials.filter((m) => {
     const itemDef = ITEMS.find((item) => item.id === m.itemId);
-    return itemDef?.category === "material";
+    return itemDef?.type === "material";
   });
 
   const sellableConsumables = save.inventory.consumables.filter((c) => {
     const itemDef = ITEMS.find((item) => item.id === c.itemId);
-    return itemDef?.category === "consumable";
+    return itemDef?.type === "consumable";
   });
 
   function getSellPrice(itemId: string): number {
     const itemDef = ITEMS.find((item) => item.id === itemId);
     if (itemDef === undefined) return 1;
-    const basePrice = itemDef.value ?? 1;
+    const marketDef = MARKET_ITEMS.find((item) => item.itemId === itemId);
+    const basePrice = marketDef?.price ?? itemDef.value ?? 1;
     return Math.max(1, Math.floor(basePrice * SELL_PRICE_RATIO));
   }
 

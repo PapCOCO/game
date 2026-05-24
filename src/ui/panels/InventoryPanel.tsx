@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   EquipmentInstance,
   EquipmentSlot,
@@ -13,7 +13,7 @@ import { useGameStore } from "../../game/state/gameStore";
 
 type InventoryTab = "materials" | "consumables" | "currencies" | "equipments";
 type EquipmentFilter = "all" | EquipmentSlot;
-type HoveredEntry =
+type SelectedEntry =
   | { kind: "item"; stack: ItemStack }
   | { kind: "equipment"; equipment: EquipmentInstance }
   | null;
@@ -29,6 +29,14 @@ const ITEM_TYPE_LABELS: Record<ItemType, string> = {
   material: "材料",
   consumable: "丹药",
   currency: "杂项"
+};
+
+const RARITY_LABELS: Record<string, string> = {
+  common: "普通",
+  uncommon: "优秀",
+  rare: "稀有",
+  epic: "史诗",
+  legendary: "传说"
 };
 
 const SLOT_LABELS: Record<EquipmentInstance["slot"], string> = {
@@ -66,19 +74,128 @@ function getStacks(save: GameSaveData, tab: Exclude<InventoryTab, "equipments">)
   return save.inventory.currencies;
 }
 
-function getTooltipPosition(clientX: number, clientY: number) {
+function getEnhancementDetail(equipment: EquipmentInstance): {
+  costText: string;
+  successRateText: string;
+} | null {
+  const enhancement = equipment.enhancement ?? 0;
+
+  if (enhancement >= MAX_ENHANCEMENT_LEVEL) {
+    return null;
+  }
+
+  const config = ENHANCEMENT_CONFIG[enhancement];
+
+  if (config === undefined) {
+    return null;
+  }
+
+  const materialText = config.materials
+    .map((material) => `${getItemName(material.itemId)} x${material.quantity}`)
+    .join("、");
+
   return {
-    x: Math.min(clientX + 16, window.innerWidth - 310),
-    y: Math.min(clientY + 12, window.innerHeight - 190)
+    costText: `${config.spiritStoneCost} 灵石${materialText.length > 0 ? `、${materialText}` : ""}`,
+    successRateText: `${(config.successRate * 100).toFixed(0)}%`
   };
 }
 
-export function InventoryPanel({ save }: { save: GameSaveData }) {
+function formatAffixes(equipment: EquipmentInstance): string {
+  return equipment.affixes.length > 0
+    ? equipment.affixes.map((affix) => affix.name).join("、")
+    : "无";
+}
+
+function EquipmentDetail({
+  equipment,
+  save
+}: {
+  equipment: EquipmentInstance;
+  save: GameSaveData;
+}) {
   const { discardEquipment, equipItemNow, enhanceEquipmentNow } = useGameStore();
+  const enhancement = equipment.enhancement ?? 0;
+  const enhancementDetail = getEnhancementDetail(equipment);
+  const canEnhanceThis = canEnhance(save, equipment.instanceId);
+
+  return (
+    <div className="inventory-detail-card">
+      <div className="inventory-detail-header">
+        <strong>
+          {equipment.name}
+          {enhancement > 0 ? ` +${enhancement}` : ""}
+        </strong>
+        <span>
+          {SLOT_LABELS[equipment.slot]} · {RARITY_LABELS[equipment.rarity] ?? equipment.rarity} ·
+          评分 {calculateEquipmentScore(equipment).toFixed(1)}
+        </span>
+      </div>
+      <div className="inventory-detail-body">
+        <p>属性：{formatEquipmentStats(equipment)}</p>
+        <p>词条：{formatAffixes(equipment)}</p>
+        {enhancementDetail === null ? (
+          <p>强化：已达上限</p>
+        ) : (
+          <p>
+            强化 +{enhancement + 1}：{enhancementDetail.costText} · 成功率{" "}
+            {enhancementDetail.successRateText}
+          </p>
+        )}
+      </div>
+      <div className="inventory-detail-actions">
+        <button
+          className="text-button"
+          type="button"
+          onClick={() => void equipItemNow(equipment.instanceId)}
+        >
+          穿戴
+        </button>
+        <button
+          className="text-button"
+          disabled={enhancement >= MAX_ENHANCEMENT_LEVEL || !canEnhanceThis.can}
+          title={canEnhanceThis.can ? enhancementDetail?.costText : canEnhanceThis.reason}
+          type="button"
+          onClick={() => void enhanceEquipmentNow(equipment.instanceId)}
+        >
+          强化
+        </button>
+        <button
+          className="text-button"
+          type="button"
+          onClick={() => void discardEquipment(equipment.instanceId)}
+        >
+          丢弃
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ItemDetail({ stack }: { stack: ItemStack }) {
+  const item = getItemDefinition(stack.itemId);
+
+  return (
+    <div className="inventory-detail-card">
+      <div className="inventory-detail-header">
+        <strong>{item?.name ?? stack.itemId}</strong>
+        <span>
+          {item === undefined
+            ? "未知"
+            : `${ITEM_TYPE_LABELS[item.type]} · ${RARITY_LABELS[item.rarity] ?? item.rarity}`}
+        </span>
+      </div>
+      <div className="inventory-detail-body">
+        <p>数量：{stack.quantity}</p>
+        <p>{item?.description ?? "无描述。"}</p>
+      </div>
+    </div>
+  );
+}
+
+export function InventoryPanel({ save }: { save: GameSaveData }) {
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
   const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilter>("all");
-  const [hoveredEntry, setHoveredEntry] = useState<HoveredEntry>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [selectedEntry, setSelectedEntry] = useState<SelectedEntry>(null);
   const equippedIds = new Set(Object.values(save.player.equipped));
   const unequippedEquipments = save.inventory.equipments.filter(
     (equipment) => !equippedIds.has(equipment.instanceId)
@@ -88,13 +205,39 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
       ? unequippedEquipments
       : unequippedEquipments.filter((equipment) => equipment.slot === equipmentFilter);
   const stacks = activeTab === "equipments" ? [] : getStacks(save, activeTab);
-  const hoveredItem =
-    hoveredEntry?.kind === "item" ? getItemDefinition(hoveredEntry.stack.itemId) : undefined;
 
-  function showTooltip(entry: HoveredEntry, clientX: number, clientY: number) {
-    setHoveredEntry(entry);
-    setTooltipPosition(getTooltipPosition(clientX, clientY));
-  }
+  useEffect(() => {
+    if (activeTab === "equipments") {
+      const selectedEquipment =
+        selectedEntry?.kind === "equipment"
+          ? visibleEquipments.find(
+              (equipment) => equipment.instanceId === selectedEntry.equipment.instanceId
+            )
+          : undefined;
+
+      setSelectedEntry(
+        selectedEquipment !== undefined
+          ? { kind: "equipment", equipment: selectedEquipment }
+          : visibleEquipments[0] !== undefined
+            ? { kind: "equipment", equipment: visibleEquipments[0] }
+            : null
+      );
+      return;
+    }
+
+    const selectedStack =
+      selectedEntry?.kind === "item"
+        ? stacks.find((stack) => stack.itemId === selectedEntry.stack.itemId)
+        : undefined;
+
+    setSelectedEntry(
+      selectedStack !== undefined
+        ? { kind: "item", stack: selectedStack }
+        : stacks[0] !== undefined
+          ? { kind: "item", stack: stacks[0] }
+          : null
+    );
+  }, [activeTab, equipmentFilter, save.inventory, save.player.equipped]);
 
   return (
     <section className="panel inventory-panel text-panel">
@@ -111,7 +254,7 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
             type="button"
             onClick={() => {
               setActiveTab(tab);
-              setHoveredEntry(null);
+              setSelectedEntry(null);
             }}
           >
             {TAB_LABELS[tab]}
@@ -140,7 +283,7 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
                 type="button"
                 onClick={() => {
                   setEquipmentFilter(filter);
-                  setHoveredEntry(null);
+                  setSelectedEntry(null);
                 }}
               >
                 {EQUIPMENT_FILTER_LABELS[filter]}
@@ -149,154 +292,80 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
           </div>
         ) : null}
 
-        <div className="inventory-compact-list" aria-label="物品列表">
-          {activeTab === "equipments" ? (
-            visibleEquipments.length === 0 ? (
-              <p className="muted-text">没有未穿戴装备。</p>
+        <div className="inventory-browser">
+          <div className="inventory-compact-list" aria-label="物品列表">
+            {activeTab === "equipments" ? (
+              visibleEquipments.length === 0 ? (
+                <p className="muted-text">没有未穿戴装备。</p>
+              ) : (
+                visibleEquipments.map((equipment) => {
+                  const enhancement = equipment.enhancement ?? 0;
+                  const isSelected =
+                    selectedEntry?.kind === "equipment" &&
+                    selectedEntry.equipment.instanceId === equipment.instanceId;
+
+                  return (
+                    <button
+                      className={
+                        isSelected
+                          ? "inventory-compact-row equipment-backpack-row inventory-selected-row"
+                          : "inventory-compact-row equipment-backpack-row"
+                      }
+                      key={equipment.instanceId}
+                      type="button"
+                      onClick={() => setSelectedEntry({ kind: "equipment", equipment })}
+                    >
+                      <span className="inventory-item-name">
+                        {equipment.name}
+                        {enhancement > 0 ? ` +${enhancement}` : ""}
+                      </span>
+                      <span className="inventory-item-meta">
+                        {SLOT_LABELS[equipment.slot]} · {RARITY_LABELS[equipment.rarity] ?? equipment.rarity} ·
+                        评分 {calculateEquipmentScore(equipment).toFixed(0)}
+                      </span>
+                    </button>
+                  );
+                })
+              )
+            ) : stacks.length === 0 ? (
+              <p className="muted-text">此类物品尚无收获。</p>
             ) : (
-              visibleEquipments.map((equipment) => {
-                const enhancement = equipment.enhancement ?? 0;
-                const canEnhanceThis = canEnhance(save, equipment.instanceId);
+              stacks.map((stack) => {
+                const item = getItemDefinition(stack.itemId);
+                const isSelected =
+                  selectedEntry?.kind === "item" &&
+                  selectedEntry.stack.itemId === stack.itemId;
 
                 return (
-                  <div
-                    className="inventory-compact-row equipment-backpack-row"
-                    key={equipment.instanceId}
+                  <button
+                    className={
+                      isSelected
+                        ? "inventory-compact-row inventory-selected-row"
+                        : "inventory-compact-row"
+                    }
+                    key={stack.itemId}
+                    type="button"
+                    onClick={() => setSelectedEntry({ kind: "item", stack })}
                   >
-                    <span
-                      className="inventory-item-name inventory-hover-name"
-                      onBlur={() => setHoveredEntry(null)}
-                      onFocus={(event) => {
-                        const rect = event.currentTarget.getBoundingClientRect();
-                        showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
-                      }}
-                      onMouseEnter={(event) =>
-                        showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                      }
-                      onMouseLeave={() => setHoveredEntry(null)}
-                      onMouseMove={(event) =>
-                        showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                      }
-                      tabIndex={0}
-                    >
-                      {equipment.name}
-                      {enhancement > 0 ? ` +${enhancement}` : ""}
-                    </span>
+                    <span className="inventory-item-name">{item?.name ?? stack.itemId}</span>
                     <span className="inventory-item-meta">
-                      {SLOT_LABELS[equipment.slot]} · {equipment.rarity} · {calculateEquipmentScore(equipment).toFixed(0)}
+                      {RARITY_LABELS[item?.rarity ?? ""] ?? item?.rarity ?? "未知"} · x{stack.quantity}
                     </span>
-                    <div className="inventory-row-actions">
-                      <button
-                        className="text-button"
-                        type="button"
-                        onClick={() => void equipItemNow(equipment.instanceId)}
-                      >
-                        穿
-                      </button>
-                      {enhancement < MAX_ENHANCEMENT_LEVEL && (
-                        <button
-                          className="text-button"
-                          type="button"
-                          disabled={!canEnhanceThis.can}
-                          onClick={() => void enhanceEquipmentNow(equipment.instanceId)}
-                        >
-                          强化
-                        </button>
-                      )}
-                      <button
-                        className="text-button"
-                        type="button"
-                        onClick={() => void discardEquipment(equipment.instanceId)}
-                      >
-                        弃
-                      </button>
-                    </div>
-                  </div>
+                  </button>
                 );
               })
-            )
-          ) : stacks.length === 0 ? (
-            <p className="muted-text">此类物品尚无收获。</p>
-          ) : (
-            stacks.map((stack) => {
-              const item = getItemDefinition(stack.itemId);
+            )}
+          </div>
 
-              return (
-                <div
-                  className="inventory-compact-row"
-                  key={stack.itemId}
-                >
-                  <span
-                    className="inventory-item-name inventory-hover-name"
-                    onBlur={() => setHoveredEntry(null)}
-                    onFocus={(event) => {
-                      const rect = event.currentTarget.getBoundingClientRect();
-                      showTooltip({ kind: "item", stack }, rect.right, rect.top);
-                    }}
-                    onMouseEnter={(event) =>
-                      showTooltip({ kind: "item", stack }, event.clientX, event.clientY)
-                    }
-                    onMouseLeave={() => setHoveredEntry(null)}
-                    onMouseMove={(event) => showTooltip({ kind: "item", stack }, event.clientX, event.clientY)}
-                    tabIndex={0}
-                  >
-                    {item?.name ?? stack.itemId}
-                  </span>
-                  <span className="inventory-item-meta">{item?.rarity ?? "未知"} · x{stack.quantity}</span>
-                </div>
-              );
-            })
+          {selectedEntry === null ? (
+            <div className="inventory-detail-empty">选择一件物品查看详情。</div>
+          ) : selectedEntry.kind === "item" ? (
+            <ItemDetail stack={selectedEntry.stack} />
+          ) : (
+            <EquipmentDetail equipment={selectedEntry.equipment} save={save} />
           )}
         </div>
       </div>
-
-      {hoveredEntry !== null ? (
-        <div
-          className="floating-item-detail"
-          role="tooltip"
-          style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
-        >
-          {hoveredEntry.kind === "item" ? (
-            <>
-              <strong>{hoveredItem?.name ?? hoveredEntry.stack.itemId}</strong>
-              <span>
-                {hoveredItem === undefined
-                  ? "未知"
-                  : `${ITEM_TYPE_LABELS[hoveredItem.type]} · ${hoveredItem.rarity}`}
-              </span>
-              <span>数量：{hoveredEntry.stack.quantity}</span>
-              <p>{hoveredItem?.description ?? "无描述。"}</p>
-            </>
-          ) : (
-            <>
-              <strong>
-                {hoveredEntry.equipment.name}
-                {(hoveredEntry.equipment.enhancement ?? 0) > 0 ? ` +${hoveredEntry.equipment.enhancement}` : ""}
-              </strong>
-              <span>
-                {SLOT_LABELS[hoveredEntry.equipment.slot]} · {hoveredEntry.equipment.rarity} · 评分{" "}
-                {calculateEquipmentScore(hoveredEntry.equipment).toFixed(1)}
-              </span>
-              <p>{formatEquipmentStats(hoveredEntry.equipment)}</p>
-              <p>
-                词条：
-                {hoveredEntry.equipment.affixes.length > 0
-                  ? hoveredEntry.equipment.affixes.map((affix) => affix.name).join("、")
-                  : "无"}
-              </p>
-              {(hoveredEntry.equipment.enhancement ?? 0) < MAX_ENHANCEMENT_LEVEL && (
-                <p style={{ fontSize: "11px", color: "#879084", marginTop: "4px" }}>
-                  强化 +{(hoveredEntry.equipment.enhancement ?? 0) + 1}: {ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].spiritStoneCost} 灵石
-                  {ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].materials.map((m) => ` · ${m.quantity} ${getItemName(m.itemId)}`).join("")}
-                  <span style={{ color: "#7fb3a0" }}>
-                    {" "}({(ENHANCEMENT_CONFIG[(hoveredEntry.equipment.enhancement ?? 0)].successRate * 100).toFixed(0)}% 成功率)
-                  </span>
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      ) : null}
     </section>
   );
 }

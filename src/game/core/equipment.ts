@@ -3,12 +3,11 @@ import type {
   EquipmentInstance,
   EquipmentSlot,
   GameSaveData,
-  StatModifier,
-  GameLogEntry
+  StatModifier
 } from "../types";
 import { calculateFinalStats, getEquipmentByInstanceId } from "./selectors";
-import { createId } from "./random";
-import { getEnhancementStats } from "./enhancement";
+import { getEnhancementStats } from "./enhancementStats";
+import { appendLog, touchSave } from "./saveUtils";
 
 const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
@@ -56,41 +55,6 @@ function describeModifier(modifier: StatModifier): string {
     modifier.stat,
     modifier.value
   )}`;
-}
-
-export function appendEquipmentLog(save: GameSaveData, message: string, now: number): GameSaveData {
-  const entry: GameLogEntry = {
-    id: createId("log"),
-    type: "equipment",
-    message,
-    createdAt: now
-  };
-
-  return {
-    ...save,
-    logs: {
-      ...save.logs,
-      entries: [entry, ...save.logs.entries].slice(0, save.logs.maxEntries)
-    }
-  };
-}
-
-export function touchSave(save: GameSaveData, now: number): GameSaveData {
-  return {
-    ...save,
-    meta: {
-      ...save.meta,
-      updatedAt: now
-    },
-    runtime: {
-      ...save.runtime,
-      time: {
-        ...save.runtime.time,
-        updatedAt: now,
-        lastSavedAt: now
-      }
-    }
-  };
 }
 
 function recalculateFinalStats(save: GameSaveData): GameSaveData {
@@ -171,8 +135,9 @@ export function equipItem(
     }
   };
 
-  return appendEquipmentLog(
+  return appendLog(
     recalculateFinalStats(touchSave(equippedSave, now)),
+    "equipment",
     `已装备${equipment.name}。`,
     now
   );
@@ -201,8 +166,9 @@ export function unequipItem(
     }
   };
 
-  return appendEquipmentLog(
+  return appendLog(
     recalculateFinalStats(touchSave(unequippedSave, now)),
+    "equipment",
     `已卸下${equipment?.name ?? "装备"}。`,
     now
   );
