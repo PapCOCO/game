@@ -9,8 +9,7 @@ import { CultivationPanel } from "../panels/CultivationPanel";
 import { EquipmentPanel } from "../panels/EquipmentPanel";
 import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
-import { AlchemyPanel } from "../panels/AlchemyPanel";
-import { MarketPanel } from "../panels/MarketPanel";
+import { AlchemyMarketPanel } from "../panels/AlchemyMarketPanel";
 import { EstatePanel } from "../panels/EstatePanel";
 import { EscapeMenu } from "../components/EscapeMenu";
 
@@ -132,10 +131,7 @@ export function GameScreen() {
                   <InventoryPanel save={save} />
                 </>
               ) : rightTab === "alchemy" ? (
-                <>
-                  <AlchemyPanel save={save} />
-                  <MarketPanel save={save} />
-                </>
+                <AlchemyMarketPanel save={save} />
               ) : (
                 <EstatePanel save={save} />
               )}

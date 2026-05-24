@@ -1518,9 +1518,14 @@ h3 {
   scrollbar-color: #566158 #0d1110;
 }
 
-.alchemy-panel {
+.alchemy-market-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
 }
 
 .alchemy-status {
@@ -1567,11 +1572,6 @@ h3 {
   display: grid;
   align-content: start;
   gap: 4px;
-  flex: 1 1 auto;
-  min-height: 0;
-  margin-top: 8px;
-  overflow-y: auto;
-  scrollbar-color: #566158 #0d1110;
 }
 
 .alchemy-recipe-row {
@@ -1653,61 +1653,10 @@ h3 {
   color: #b95c4a !important;
 }
 
-.alchemy-detail {
-  display: grid;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid #8b6b35;
-  border-radius: 4px;
-  background: #0f1411;
-}
-
-.alchemy-detail strong {
-  color: #d2a65a;
-}
-
-.alchemy-detail p {
-  margin: 0;
-  color: #9da697;
-  font-size: 12px;
-}
-
-.alchemy-detail-materials {
-  display: grid;
-  gap: 4px;
-}
-
-.alchemy-material-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 6px;
-  border-radius: 3px;
-  color: #aeb8ac;
-  font-size: 12px;
-  background: #101512;
-}
-
-.alchemy-detail-cost {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 3px;
-  color: #d8d0bf;
-  background: #101512;
-}
-
-.alchemy-detail-cost strong {
-  color: #d2a65a;
-}
-
-.market-panel {
-  min-height: 0;
-  overflow: hidden;
+.market-heading {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid #303832;
 }
 
 .market-status {
@@ -1748,11 +1697,6 @@ h3 {
   display: grid;
   align-content: start;
   gap: 4px;
-  flex: 1 1 auto;
-  min-height: 0;
-  margin-top: 6px;
-  overflow-y: auto;
-  scrollbar-color: #566158 #0d1110;
 }
 
 .market-item-row,
