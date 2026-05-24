@@ -101,42 +101,46 @@ export function GameScreen() {
         </section>
 
         <aside className="game-column right-column">
-          <div className="right-panel-tabs" role="tablist" aria-label="右侧面板">
-            <button
-              className={rightTab === "inventory" ? "tab-button tab-button-active" : "tab-button"}
-              type="button"
-              onClick={() => setRightTab("inventory")}
-            >
-              装备行囊
-            </button>
-            <button
-              className={rightTab === "alchemy" ? "tab-button tab-button-active" : "tab-button"}
-              type="button"
-              onClick={() => setRightTab("alchemy")}
-            >
-              炼丹坊市
-            </button>
-            <button
-              className={rightTab === "estate" ? "tab-button tab-button-active" : "tab-button"}
-              type="button"
-              onClick={() => setRightTab("estate")}
-            >
-              洞府
-            </button>
+          <div className="right-column-inner">
+            <div className="right-panel-tabs" role="tablist" aria-label="右侧面板">
+              <button
+                className={rightTab === "inventory" ? "tab-button tab-button-active" : "tab-button"}
+                type="button"
+                onClick={() => setRightTab("inventory")}
+              >
+                装备行囊
+              </button>
+              <button
+                className={rightTab === "alchemy" ? "tab-button tab-button-active" : "tab-button"}
+                type="button"
+                onClick={() => setRightTab("alchemy")}
+              >
+                炼丹坊市
+              </button>
+              <button
+                className={rightTab === "estate" ? "tab-button tab-button-active" : "tab-button"}
+                type="button"
+                onClick={() => setRightTab("estate")}
+              >
+                洞府
+              </button>
+            </div>
+            <div className="right-panel-content">
+              {rightTab === "inventory" ? (
+                <>
+                  <EquipmentPanel save={save} />
+                  <InventoryPanel save={save} />
+                </>
+              ) : rightTab === "alchemy" ? (
+                <>
+                  <AlchemyPanel save={save} />
+                  <MarketPanel save={save} />
+                </>
+              ) : (
+                <EstatePanel save={save} />
+              )}
+            </div>
           </div>
-          {rightTab === "inventory" ? (
-            <>
-              <EquipmentPanel save={save} />
-              <InventoryPanel save={save} />
-            </>
-          ) : rightTab === "alchemy" ? (
-            <>
-              <AlchemyPanel save={save} />
-              <MarketPanel save={save} />
-            </>
-          ) : (
-            <EstatePanel save={save} />
-          )}
         </aside>
       </div>
 

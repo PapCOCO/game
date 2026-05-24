@@ -1484,6 +1484,15 @@ h3 {
   }
 }
 
+.right-column-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .right-panel-tabs {
   display: flex;
   gap: 6px;
@@ -1491,11 +1500,22 @@ h3 {
   border: 1px solid #39413c;
   border-radius: 4px;
   background: #121714;
+  flex: 0 0 auto;
 }
 
 .right-panel-tabs .tab-button {
   flex: 1 1 0;
   text-align: center;
+}
+
+.right-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
 }
 
 .alchemy-panel {
