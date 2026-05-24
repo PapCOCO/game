@@ -14,4 +14,8 @@ export interface MapDefinition {
 export interface MapState {
   currentMapId: ID;
   unlockedMapIds: ID[];
+  encounter: {
+    lastSearchedAt: number;
+    totalEncounters: number;
+  };
 }

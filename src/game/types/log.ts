@@ -11,7 +11,9 @@ export type GameLogType =
   | "offline"
   | "alchemy"
   | "market"
-  | "estate";
+  | "estate"
+  | "encounter"
+  | "technique";
 
 export interface GameLogEntry {
   id: ID;

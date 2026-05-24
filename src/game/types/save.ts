@@ -6,6 +6,7 @@ import type { AutoBattleState } from "./monster";
 import type { GameLogState } from "./log";
 import type { AlchemyState, MarketState } from "./alchemy";
 import type { EstateState } from "./estate";
+import type { TechniqueState } from "./technique";
 
 export interface SaveMeta {
   version: SaveVersion;
@@ -40,4 +41,5 @@ export interface GameSaveData {
   alchemy: AlchemyState;
   market: MarketState;
   estate: EstateState;
+  techniques: TechniqueState;
 }

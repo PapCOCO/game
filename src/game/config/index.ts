@@ -8,3 +8,5 @@ export * from "./dropTables";
 export * from "./recipes";
 export * from "./market";
 export * from "./estate";
+export * from "./encounters";
+export * from "./techniques";

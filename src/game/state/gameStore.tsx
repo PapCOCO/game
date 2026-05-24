@@ -23,6 +23,7 @@ import {
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
 import { craftPill } from "../core/alchemy";
+import { searchMapEncounter } from "../core/encounter";
 import { refreshMarket, buyItem, sellItem } from "../core/market";
 import { upgradeFacility, plantField, harvestField, collectVeinCultivation, type EstateFacilityType } from "../core/estate";
 import type { OfflineRewardSummary } from "../types";
@@ -44,6 +45,7 @@ interface GameStoreValue extends GameStoreState {
   tick: () => void;
   breakthroughNow: () => Promise<void>;
   changeMap: (mapId: string) => Promise<void>;
+  searchEncounterNow: () => Promise<void>;
   toggleAutoBattleNow: () => Promise<void>;
   equipItemNow: (instanceId: string) => Promise<void>;
   unequipSlotNow: (slot: EquipmentSlot) => Promise<void>;
@@ -385,6 +387,41 @@ export function GameProvider({ children }: { children: ReactNode }) {
         status: "error",
         errorMessage: error instanceof Error ? error.message : "切换自动历练状态后保存失败",
         noticeMessage: message,
+        offlineReward: null
+      });
+    }
+  }, [state]);
+
+  const searchEncounterNow = useCallback(async () => {
+    if (state.save === null) {
+      return;
+    }
+
+    const result = searchMapEncounter(state.save);
+
+    if (!result.success) {
+      setState({
+        ...state,
+        noticeMessage: result.message
+      });
+      return;
+    }
+
+    setState({
+      save: result.save,
+      status: "ready",
+      noticeMessage: result.message,
+      offlineReward: null
+    });
+
+    try {
+      await saveGameSave(result.save);
+    } catch (error) {
+      setState({
+        save: result.save,
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "奇遇后保存失败",
+        noticeMessage: result.message,
         offlineReward: null
       });
     }
@@ -817,6 +854,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tick,
       breakthroughNow,
       changeMap,
+      searchEncounterNow,
       toggleAutoBattleNow,
       equipItemNow,
       unequipSlotNow,
@@ -848,6 +886,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       plantEstateField,
       refreshMarketNow,
       saveNow,
+      searchEncounterNow,
       sellInventoryItem,
       state,
       tick,

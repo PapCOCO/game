@@ -5,6 +5,7 @@ import { calculateFinalStats } from "../core/selectors";
 import { CURRENT_SAVE_VERSION } from "./saveVersion";
 import { validateSaveData } from "./validateSave";
 import { createInitialEstateState } from "../core/estate";
+import { normalizeTechniqueState } from "../core/technique";
 
 export function migrateSaveData(input: unknown): GameSaveData | null {
   if (!validateSaveData(input)) {
@@ -140,7 +141,11 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     map: {
       ...input.map,
       currentMapId: input.map.currentMapId,
-      unlockedMapIds: input.map.unlockedMapIds ?? progress.unlockedMapIds ?? []
+      unlockedMapIds: input.map.unlockedMapIds ?? progress.unlockedMapIds ?? [],
+      encounter: {
+        lastSearchedAt: input.map.encounter?.lastSearchedAt ?? now - 5 * 60 * 1000,
+        totalEncounters: input.map.encounter?.totalEncounters ?? 0
+      }
     },
     autoBattle: {
       ...(input.autoBattle ?? {}),
@@ -183,7 +188,8 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       items: market.items ?? [],
       lastRefreshedAt: market.lastRefreshedAt ?? now
     },
-    estate: normalizedEstate
+    estate: normalizedEstate,
+    techniques: normalizeTechniqueState(input.techniques)
   };
 
   const recalculatedStats = calculateFinalStats(normalizedSave);

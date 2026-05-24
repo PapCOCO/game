@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { GameSaveData } from "../../game/types";
+import { TECHNIQUES } from "../../game/config/techniques";
 import {
   calculateFinalStats,
   getCurrentMap,
@@ -62,6 +63,13 @@ const STAT_TOOLTIPS = {
     formula: "境界属性 = 基础属性 + 境界加成\n境界越高，所有基础属性越高",
     howToImprove: "• 积累修为\n• 突破到更高境界\n• 突破失败会降低成功率"
   }
+};
+
+const TECHNIQUE_CATEGORY_LABELS: Record<string, string> = {
+  body: "炼体",
+  sword: "剑诀",
+  mind: "心法",
+  movement: "身法"
 };
 
 export function CharacterPanel({ save }: { save: GameSaveData }) {
@@ -127,6 +135,30 @@ export function CharacterPanel({ save }: { save: GameSaveData }) {
               <StatBlock label="当前境界" value={realm?.name ?? save.player.realmId} tooltip={STAT_TOOLTIPS.realm} />
               <StatBlock label="当前地图" value={currentMap?.name ?? save.map.currentMapId} />
               <StatBlock label="击杀数量" value={save.autoBattle.defeatedCount} />
+            </div>
+
+            <div className="technique-detail-section">
+              <h3>功法参悟</h3>
+              <div className="technique-list">
+                {TECHNIQUES.map((technique) => {
+                  const progress = save.techniques.progress.find((entry) => entry.definitionId === technique.id);
+                  const fragments = progress?.fragments ?? 0;
+                  const learned = progress?.learned ?? false;
+
+                  return (
+                    <div className={learned ? "technique-row technique-learned" : "technique-row"} key={technique.id}>
+                      <div>
+                        <strong>{technique.name}</strong>
+                        <span>{TECHNIQUE_CATEGORY_LABELS[technique.category]} · {technique.rarity}</span>
+                      </div>
+                      <p>{technique.description}</p>
+                      <small>
+                        {learned ? "已参悟" : `残页 ${fragments} / ${technique.requiredFragments}`}
+                      </small>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
         </div>

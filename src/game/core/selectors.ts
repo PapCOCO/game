@@ -12,6 +12,7 @@ import type {
 import { EMPTY_CORE_STATS } from "../types";
 import { MAPS, REALMS } from "../config";
 import { getUnlockedMapIdsByRealm } from "./mapUnlock";
+import { getLearnedTechniques } from "./technique";
 
 const CORE_STAT_KEYS: Array<keyof CoreStats> = [
   "attack",
@@ -126,6 +127,12 @@ export function calculateFinalStats(save: GameSaveData): BattleStats {
       for (const modifier of affix.modifiers) {
         applyModifier(stats, modifier);
       }
+    }
+  }
+
+  for (const technique of getLearnedTechniques(save)) {
+    for (const modifier of technique.modifiers) {
+      applyModifier(stats, modifier);
     }
   }
 
