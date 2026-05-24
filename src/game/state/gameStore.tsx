@@ -38,6 +38,7 @@ interface GameStoreValue extends GameStoreState {
   tick: () => void;
   breakthroughNow: () => Promise<void>;
   changeMap: (mapId: string) => Promise<void>;
+  toggleAutoBattleNow: () => Promise<void>;
   equipItemNow: (instanceId: string) => Promise<void>;
   unequipSlotNow: (slot: EquipmentSlot) => Promise<void>;
   discardEquipment: (instanceId: string) => Promise<void>;
@@ -249,6 +250,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
               ...state.save.runtime.time,
               updatedAt: now
             }
+          },
+          autoBattle: {
+            ...state.save.autoBattle,
+            currentEnemy: undefined,
+            lastAttackAt: now,
+            battleStartedAt: state.save.autoBattle.battleStartedAt ?? now
           }
         },
         `已前往${targetMap.name}。`,
@@ -274,6 +281,57 @@ export function GameProvider({ children }: { children: ReactNode }) {
     },
     [state]
   );
+
+  const toggleAutoBattleNow = useCallback(async () => {
+    if (state.save === null) {
+      return;
+    }
+
+    const now = Date.now();
+    const willEnable = !state.save.autoBattle.enabled;
+    const message = willEnable ? "自动历练已开启。" : "自动历练已暂停。";
+    const nextSave = appendSystemLog(
+      {
+        ...state.save,
+        meta: {
+          ...state.save.meta,
+          updatedAt: now
+        },
+        autoBattle: {
+          ...state.save.autoBattle,
+          enabled: willEnable,
+          lastAttackAt: willEnable ? now : state.save.autoBattle.lastAttackAt,
+          battleStartedAt: state.save.autoBattle.battleStartedAt ?? now
+        },
+        runtime: {
+          ...state.save.runtime,
+          time: {
+            ...state.save.runtime.time,
+            updatedAt: now
+          }
+        }
+      },
+      message,
+      now
+    );
+
+    setState({
+      save: nextSave,
+      status: "ready",
+      noticeMessage: message
+    });
+
+    try {
+      await saveGameSave(nextSave);
+    } catch (error) {
+      setState({
+        save: nextSave,
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "切换自动历练状态后保存失败",
+        noticeMessage: message
+      });
+    }
+  }, [state]);
 
   const equipItemNow = useCallback(
     async (instanceId: string) => {
@@ -431,6 +489,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tick,
       breakthroughNow,
       changeMap,
+      toggleAutoBattleNow,
       equipItemNow,
       unequipSlotNow,
       discardEquipment,
@@ -447,6 +506,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       saveNow,
       state,
       tick,
+      toggleAutoBattleNow,
       unequipSlotNow
     ]
   );

@@ -1,5 +1,6 @@
 import type { GameSaveData } from "../types";
 import { EMPTY_CORE_STATS } from "../types";
+import { MONSTERS } from "../config";
 import { calculateFinalStats } from "../core/selectors";
 import { CURRENT_SAVE_VERSION } from "./saveVersion";
 import { validateSaveData } from "./validateSave";
@@ -58,6 +59,20 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     lastSavedAt: now,
     lastActiveAt: now
   };
+  const inputEnemy = input.autoBattle?.currentEnemy;
+  const normalizedEnemy =
+    inputEnemy !== undefined &&
+    typeof inputEnemy.monsterId === "string" &&
+    typeof inputEnemy.currentHp === "number" &&
+    typeof inputEnemy.maxHp === "number" &&
+    inputEnemy.maxHp > 0 &&
+    MONSTERS.some((monster) => monster.id === inputEnemy.monsterId)
+      ? {
+          monsterId: inputEnemy.monsterId,
+          currentHp: Math.min(Math.max(0, inputEnemy.currentHp), inputEnemy.maxHp),
+          maxHp: inputEnemy.maxHp
+        }
+      : undefined;
   const normalizedSave: GameSaveData = {
     ...input,
     player: {
@@ -99,8 +114,10 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     },
     autoBattle: {
       ...(input.autoBattle ?? {}),
-      enabled: true,
-      defeatedCount: input.autoBattle?.defeatedCount ?? 0
+      enabled: input.autoBattle?.enabled ?? true,
+      currentEnemy: normalizedEnemy,
+      defeatedCount: input.autoBattle?.defeatedCount ?? 0,
+      recoveringUntil: input.autoBattle?.recoveringUntil
     },
     logs: {
       ...logs,
@@ -126,11 +143,27 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     }
   };
 
+  const recalculatedStats = calculateFinalStats(normalizedSave);
+  const recoveringUntil = normalizedSave.autoBattle.recoveringUntil;
+  const isRecovering = recoveringUntil !== undefined && recoveringUntil > now;
+  const playerCurrentHp =
+    normalizedSave.autoBattle.playerCurrentHp === undefined ||
+    (!isRecovering && normalizedSave.autoBattle.playerCurrentHp <= 0)
+      ? recalculatedStats.maxHp
+      : Math.min(
+          Math.max(0, normalizedSave.autoBattle.playerCurrentHp),
+          Math.max(1, recalculatedStats.maxHp)
+        );
+
   return {
     ...normalizedSave,
     player: {
       ...normalizedSave.player,
-      finalStats: calculateFinalStats(normalizedSave)
+      finalStats: recalculatedStats
+    },
+    autoBattle: {
+      ...normalizedSave.autoBattle,
+      playerCurrentHp
     }
   };
 }

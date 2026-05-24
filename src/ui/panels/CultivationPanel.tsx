@@ -23,7 +23,7 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
   const isMaxRealm = nextRealm === null;
 
   return (
-    <section className="panel">
+    <section className="panel cultivation-panel">
       <div className="panel-heading">
         <span className="eyebrow">Cultivation</span>
         <h2>修为进境</h2>

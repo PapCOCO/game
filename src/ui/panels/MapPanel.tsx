@@ -8,7 +8,7 @@ export function MapPanel({ save }: { save: GameSaveData }) {
   const unlockedMaps = getUnlockedMaps(save);
 
   return (
-    <section className="panel">
+    <section className="panel map-panel">
       <div className="panel-heading">
         <span className="eyebrow">Map</span>
         <h2>{currentMap?.name ?? "未知地图"}</h2>

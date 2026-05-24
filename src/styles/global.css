@@ -302,6 +302,11 @@ h3 {
   background: rgba(22, 22, 28, 0.86);
 }
 
+.character-panel,
+.cultivation-panel {
+  overflow-y: auto;
+}
+
 .panel-heading {
   display: grid;
   gap: 4px;
@@ -352,6 +357,12 @@ h3 {
   color: #f5f1e8;
   font-size: 16px;
   line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.panel-description {
+  font-size: 13px;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
@@ -468,15 +479,90 @@ h3 {
   flex: 1 1 auto;
 }
 
+.combat-heading {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.combat-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.combat-card,
+.combatant-card {
+  min-width: 0;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.combat-card {
+  padding: 8px 10px;
+}
+
+.combat-card strong {
+  display: block;
+  margin-top: 3px;
+  color: #f5f1e8;
+  overflow-wrap: anywhere;
+}
+
+.combat-duel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  flex: 0 0 auto;
+}
+
+.combatant-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.combatant-header,
+.combatant-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.combatant-header h3,
+.combatant-header small,
+.combatant-meta span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.combatant-header small,
+.combatant-meta {
+  color: #aaa296;
+  font-size: 11px;
+}
+
 .combat-section {
   display: grid;
   gap: 8px;
   margin-top: 12px;
 }
 
+.monster-pool-section {
+  flex: 0 0 auto;
+}
+
 .monster-pool {
   display: grid;
   gap: 6px;
+}
+
+.compact-monster-pool {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .monster-row {
@@ -492,11 +578,22 @@ h3 {
 
 .monster-row span {
   color: #f5f1e8;
+  font-size: 12px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .monster-row small {
   color: #aaa296;
+}
+
+.combat-log-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  margin-top: 12px;
 }
 
 .inventory-scroll {
@@ -558,6 +655,7 @@ h3 {
   gap: 6px;
   min-width: 0;
   padding: 10px;
+  overflow-wrap: anywhere;
 }
 
 .equipment-header {
@@ -569,6 +667,7 @@ h3 {
 
 .equipment-header strong {
   color: #f5f1e8;
+  overflow-wrap: anywhere;
 }
 
 .equipment-header span {
@@ -631,6 +730,101 @@ h3 {
   padding: 9px;
 }
 
+.escape-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 5, 8, 0.72);
+}
+
+.escape-menu {
+  display: grid;
+  gap: 16px;
+  width: min(860px, 100%);
+  max-height: min(680px, calc(100vh - 48px));
+  min-height: 0;
+  padding: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 241, 232, 0.16);
+  border-radius: 8px;
+  background: rgba(22, 22, 28, 0.98);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.45);
+}
+
+.escape-menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.escape-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.escape-menu-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.menu-stat-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.menu-stat-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.menu-stat-list dt,
+.menu-stat-list dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.menu-stat-list dt {
+  color: #aaa296;
+}
+
+.menu-stat-list dd {
+  color: #f5f1e8;
+  font-weight: 800;
+  text-align: right;
+}
+
+.menu-action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-copy-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: #d8d0c0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .rarity-common {
   border-color: rgba(245, 241, 232, 0.1);
 }
@@ -682,7 +876,11 @@ h3 {
 
   .game-header,
   .desktop-layout,
-  .topbar-meta {
+  .topbar-meta,
+  .combat-duel,
+  .combat-status-grid,
+  .compact-monster-pool,
+  .escape-menu-grid {
     grid-template-columns: 1fr;
   }
 

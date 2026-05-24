@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useGameStore } from "../../game/state/gameStore";
 import { getCurrentRealm } from "../../game/core/selectors";
 import { CharacterPanel } from "../panels/CharacterPanel";
@@ -7,6 +7,7 @@ import { CultivationPanel } from "../panels/CultivationPanel";
 import { EquipmentPanel } from "../panels/EquipmentPanel";
 import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
+import { EscapeMenu } from "../components/EscapeMenu";
 import { LogPanel } from "../components/LogPanel";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
@@ -14,6 +15,7 @@ import { useGameLoop } from "../hooks/useGameLoop";
 export function GameScreen() {
   const { noticeMessage, save, saveNow } = useGameStore();
   const [isSaving, setIsSaving] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useGameLoop();
   useAutoSave();
@@ -23,6 +25,9 @@ export function GameScreen() {
   }
 
   const currentRealm = getCurrentRealm(save);
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen((current) => !current);
+  }, []);
 
   async function handleSaveNow() {
     setIsSaving(true);
@@ -61,6 +66,9 @@ export function GameScreen() {
 
         <div className="save-controls">
           {noticeMessage !== undefined ? <span>{noticeMessage}</span> : null}
+          <button className="secondary-button" type="button" onClick={toggleMenu}>
+            菜单 / Esc
+          </button>
           <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSaveNow}>
             {isSaving ? "保存中..." : "手动保存"}
           </button>
@@ -90,6 +98,12 @@ export function GameScreen() {
           <InventoryPanel save={save} />
         </div>
       </div>
+
+      <EscapeMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onToggleOpen={toggleMenu}
+      />
     </main>
   );
 }

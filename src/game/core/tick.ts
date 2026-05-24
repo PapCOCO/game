@@ -1,14 +1,14 @@
 import type { GameSaveData } from "../types";
+import { EQUIPMENT_TEMPLATES, ITEMS } from "../config";
 import { applyCultivationGain } from "./cultivation";
-import { resolveCombat } from "./combat";
+import { resolveBattleRound } from "./combat";
 import { applyLootToSave } from "./inventory";
 import { generateLoot, type LootResult } from "./loot";
 import { createId } from "./random";
-import { EQUIPMENT_TEMPLATES, ITEMS } from "../config";
 
 const MAX_TICK_SECONDS = 10;
-const BATTLE_INTERVAL_MS = 5000;
-const MAX_BATTLES_PER_TICK = 2;
+const BATTLE_INTERVAL_MS = 1000;
+const MAX_ROUNDS_PER_TICK = 3;
 
 function appendLog(
   save: GameSaveData,
@@ -57,7 +57,11 @@ function describeLoot(loot: LootResult): string {
   return parts.length > 0 ? `获得 ${parts.join("、")}。` : "未获得掉落。";
 }
 
-function resolveAutoBattles(save: GameSaveData, now: number, fallbackLastAttackAt: number): GameSaveData {
+function resolveAutoBattleRounds(
+  save: GameSaveData,
+  now: number,
+  fallbackLastAttackAt: number
+): GameSaveData {
   if (!save.autoBattle.enabled) {
     return save;
   }
@@ -65,12 +69,12 @@ function resolveAutoBattles(save: GameSaveData, now: number, fallbackLastAttackA
   const lastAttackAt =
     save.autoBattle.lastAttackAt ?? save.autoBattle.battleStartedAt ?? fallbackLastAttackAt;
   const elapsedBattleMs = now - lastAttackAt;
-  const battleCount = Math.min(
-    MAX_BATTLES_PER_TICK,
+  const roundCount = Math.min(
+    MAX_ROUNDS_PER_TICK,
     Math.max(0, Math.floor(elapsedBattleMs / BATTLE_INTERVAL_MS))
   );
 
-  if (battleCount <= 0) {
+  if (roundCount <= 0) {
     return {
       ...save,
       autoBattle: {
@@ -82,35 +86,43 @@ function resolveAutoBattles(save: GameSaveData, now: number, fallbackLastAttackA
 
   let nextSave = save;
 
-  for (let index = 0; index < battleCount; index += 1) {
-    const battleTime = Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * (index + 1));
-    const combatResult = resolveCombat(nextSave, battleTime);
+  for (let index = 0; index < roundCount; index += 1) {
+    const roundTime = Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * (index + 1));
+    const result = resolveBattleRound(nextSave, roundTime);
 
-    if (!combatResult.won || combatResult.monsterId === null) {
-      nextSave = appendLog(nextSave, "battle", combatResult.message, battleTime);
-      continue;
+    nextSave = result.save;
+
+    if (result.summary.type === "player_attack") {
+      nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
     }
 
-    const loot = generateLoot(combatResult.monsterId, battleTime);
-    nextSave = applyLootToSave(nextSave, loot, battleTime);
-    nextSave = appendLog(nextSave, "battle", combatResult.message, battleTime);
-    nextSave = appendLog(nextSave, "drop", describeLoot(loot), battleTime);
-    nextSave = {
-      ...nextSave,
-      player: {
-        ...nextSave.player,
-        progress: {
-          ...nextSave.player.progress,
-          defeatedMonsterIds: combatResult.monsterId
-            ? [...new Set([...nextSave.player.progress.defeatedMonsterIds, combatResult.monsterId])]
-            : nextSave.player.progress.defeatedMonsterIds
+    if (result.summary.type === "enemy_defeated" && result.summary.monsterId !== undefined) {
+      const loot = generateLoot(result.summary.monsterId, roundTime);
+      nextSave = applyLootToSave(nextSave, loot, roundTime);
+      nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
+      nextSave = appendLog(nextSave, "drop", describeLoot(loot), roundTime);
+      nextSave = {
+        ...nextSave,
+        player: {
+          ...nextSave.player,
+          progress: {
+            ...nextSave.player.progress,
+            defeatedMonsterIds: [
+              ...new Set([...nextSave.player.progress.defeatedMonsterIds, result.summary.monsterId])
+            ]
+          }
+        },
+        autoBattle: {
+          ...nextSave.autoBattle,
+          currentEnemy: undefined,
+          defeatedCount: nextSave.autoBattle.defeatedCount + 1
         }
-      },
-      autoBattle: {
-        ...nextSave.autoBattle,
-        defeatedCount: nextSave.autoBattle.defeatedCount + 1
-      }
-    };
+      };
+    }
+
+    if (result.summary.type === "player_defeated") {
+      nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
+    }
   }
 
   return {
@@ -118,7 +130,7 @@ function resolveAutoBattles(save: GameSaveData, now: number, fallbackLastAttackA
     autoBattle: {
       ...nextSave.autoBattle,
       battleStartedAt: nextSave.autoBattle.battleStartedAt ?? now,
-      lastAttackAt: Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * battleCount)
+      lastAttackAt: Math.min(now, lastAttackAt + BATTLE_INTERVAL_MS * roundCount)
     }
   };
 }
@@ -131,6 +143,7 @@ export function tickGame(save: GameSaveData, now = Date.now()): GameSaveData {
   }
 
   const elapsedSeconds = Math.min(elapsedMs / 1000, MAX_TICK_SECONDS);
+  const cultivatedSave = applyCultivationGain(save, elapsedSeconds, now);
 
-  return resolveAutoBattles(applyCultivationGain(save, elapsedSeconds, now), now, save.runtime.time.lastActiveAt);
+  return resolveAutoBattleRounds(cultivatedSave, now, save.runtime.time.lastActiveAt);
 }
