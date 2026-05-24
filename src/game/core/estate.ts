@@ -8,7 +8,9 @@ interface UpgradeCost {
   materials: Array<{ itemId: string; quantity: number }>;
 }
 
-function getUpgradeCost(facility: "spiritField" | "spiritVein" | "gatheringArray", currentLevel: number): UpgradeCost {
+export type EstateFacilityType = "spiritField" | "spiritVein" | "gatheringArray" | "pillFurnace";
+
+function getUpgradeCost(facility: EstateFacilityType, currentLevel: number): UpgradeCost {
   const costs = ESTATE_CONFIG[facility].upgradeCosts as unknown as UpgradeCost[];
   return costs[currentLevel] ?? costs[costs.length - 1];
 }
@@ -99,6 +101,11 @@ export function getGatheringBonusPercent(arrayLevel: number): number {
   return ESTATE_CONFIG.gatheringArray.baseBonusPercent + (arrayLevel - 1) * ESTATE_CONFIG.gatheringArray.bonusPerLevel;
 }
 
+export function getPillFurnaceQuality(level: number) {
+  const qualities = ESTATE_CONFIG.pillFurnace.qualities;
+  return qualities[Math.min(Math.max(1, level), qualities.length) - 1] ?? qualities[0];
+}
+
 export function calculateAccumulatedCultivation(vein: SpiritVeinState, now: number): number {
   if (!vein.unlocked || vein.level <= 0) return 0;
   const elapsedMinutes = (now - vein.lastCollectedAt) / 60000;
@@ -118,7 +125,7 @@ export function getFieldTimeRemaining(field: SpiritFieldState, now: number): num
 
 export function upgradeFacility(
   save: GameSaveData,
-  facilityType: "spiritField" | "spiritVein" | "gatheringArray",
+  facilityType: EstateFacilityType,
   fieldIndex?: number,
   now = Date.now()
 ): { save: GameSaveData; success: boolean; message: string } {
@@ -249,6 +256,35 @@ export function upgradeFacility(
 
     nextSave = appendLog(nextSave, "estate", `聚灵阵升级至 ${newLevel} 级。`, now);
     return { save: nextSave, success: true, message: `聚灵阵升级至 ${newLevel} 级。` };
+  }
+
+  if (facilityType === "pillFurnace") {
+    if (estate.pillFurnace.level >= ESTATE_CONFIG.pillFurnace.maxLevel) {
+      return { save, success: false, message: "丹炉已达最高品阶。" };
+    }
+
+    const cost = getUpgradeCost("pillFurnace", estate.pillFurnace.level);
+    if (!hasEnoughResources(save, cost)) return { save, success: false, message: "资源不足，无法升级丹炉。" };
+
+    let nextSave = deductResources(save, cost);
+    const newLevel = estate.pillFurnace.level + 1;
+    const quality = getPillFurnaceQuality(newLevel);
+
+    nextSave = {
+      ...nextSave,
+      estate: {
+        ...estate,
+        pillFurnace: {
+          ...estate.pillFurnace,
+          level: newLevel,
+          qualityId: quality.id
+        },
+        exp: estate.exp + ESTATE_CONFIG.estateExpPerUpgrade
+      }
+    };
+
+    nextSave = appendLog(nextSave, "estate", `丹炉升为${quality.name}。`, now);
+    return { save: nextSave, success: true, message: `丹炉升为${quality.name}。` };
   }
 
   return { save, success: false, message: "未知设施。" };
@@ -419,6 +455,12 @@ export function createInitialEstateState(): EstateState {
       level: 0,
       unlocked: false,
       cultivationBonusPercent: 0
+    },
+    pillFurnace: {
+      definitionId: "facility.pill_furnace",
+      level: 1,
+      unlocked: true,
+      qualityId: getPillFurnaceQuality(1).id
     }
   };
 }

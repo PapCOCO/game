@@ -50,5 +50,58 @@ export const ESTATE_CONFIG = {
       { spiritStones: 400, materials: [{ itemId: "item.cracked_jade", quantity: 3 }] },
       { spiritStones: 700, materials: [{ itemId: "item.ghost_dust", quantity: 2 }] }
     ]
+  },
+
+  pillFurnace: {
+    maxLevel: 5,
+    qualities: [
+      {
+        id: "furnace.clay",
+        name: "陶土丹炉",
+        successBonus: 0,
+        costReductionPercent: 0,
+        extraYieldChance: 0,
+        expBonusPercent: 0
+      },
+      {
+        id: "furnace.bronze",
+        name: "青铜丹炉",
+        successBonus: 0.04,
+        costReductionPercent: 5,
+        extraYieldChance: 0,
+        expBonusPercent: 5
+      },
+      {
+        id: "furnace.mystic_iron",
+        name: "玄铁丹炉",
+        successBonus: 0.08,
+        costReductionPercent: 8,
+        extraYieldChance: 0.08,
+        expBonusPercent: 10
+      },
+      {
+        id: "furnace.earthfire",
+        name: "地火丹炉",
+        successBonus: 0.12,
+        costReductionPercent: 12,
+        extraYieldChance: 0.16,
+        expBonusPercent: 15
+      },
+      {
+        id: "furnace.celestial",
+        name: "星纹丹炉",
+        successBonus: 0.16,
+        costReductionPercent: 15,
+        extraYieldChance: 0.25,
+        expBonusPercent: 25
+      }
+    ],
+    upgradeCosts: [
+      { spiritStones: 0, materials: [] },
+      { spiritStones: 80, materials: [{ itemId: "item.iron_ore", quantity: 4 }] },
+      { spiritStones: 180, materials: [{ itemId: "item.cracked_jade", quantity: 3 }] },
+      { spiritStones: 360, materials: [{ itemId: "item.ghost_dust", quantity: 2 }] },
+      { spiritStones: 680, materials: [{ itemId: "item.low_spirit_core", quantity: 2 }] }
+    ]
   }
 } as const;

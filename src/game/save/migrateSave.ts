@@ -84,7 +84,25 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     items: [],
     lastRefreshedAt: now
   };
-  const estate = input.estate ?? createInitialEstateState();
+  const initialEstate = createInitialEstateState();
+  const estate = input.estate ?? initialEstate;
+  const normalizedEstate = {
+    ...initialEstate,
+    ...estate,
+    spiritFields: estate.spiritFields ?? initialEstate.spiritFields,
+    spiritVein: {
+      ...initialEstate.spiritVein,
+      ...(estate.spiritVein ?? {})
+    },
+    gatheringArray: {
+      ...initialEstate.gatheringArray,
+      ...(estate.gatheringArray ?? {})
+    },
+    pillFurnace: {
+      ...initialEstate.pillFurnace,
+      ...(estate.pillFurnace ?? {})
+    }
+  };
   const normalizedSave: GameSaveData = {
     ...input,
     player: {
@@ -165,7 +183,7 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       items: market.items ?? [],
       lastRefreshedAt: market.lastRefreshedAt ?? now
     },
-    estate
+    estate: normalizedEstate
   };
 
   const recalculatedStats = calculateFinalStats(normalizedSave);

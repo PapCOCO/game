@@ -305,7 +305,7 @@ h3 {
 }
 
 .right-column {
-  grid-template-rows: minmax(0, 1fr) minmax(0, 0.9fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .panel {
@@ -1542,6 +1542,12 @@ h3 {
   overflow: hidden;
 }
 
+.right-panel-content > .market-panel,
+.right-panel-content > .estate-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .alchemy-market-panel {
   display: flex;
   flex-direction: column;
@@ -1590,6 +1596,11 @@ h3 {
   gap: 8px;
   color: #879084;
   font-size: 11px;
+}
+
+.estate-alchemy-section {
+  display: grid;
+  gap: 8px;
 }
 
 .alchemy-recipe-list {
@@ -1721,6 +1732,14 @@ h3 {
   display: grid;
   align-content: start;
   gap: 4px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.market-panel > .market-item-list,
+.market-panel > .market-sell-list {
+  flex: 1 1 auto;
 }
 
 .market-item-row,
@@ -1991,12 +2010,18 @@ h3 {
 }
 
 .estate-vein-stats,
-.estate-array-stats {
+.estate-array-stats,
+.estate-furnace-stats {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   color: #879084;
   font-size: 12px;
+}
+
+.estate-furnace-stats span {
+  white-space: nowrap;
 }
 
 .estate-upgrade-row {

@@ -30,12 +30,17 @@ export interface GatheringArrayState extends EstateFacilityState {
   cultivationBonusPercent: number;
 }
 
+export interface PillFurnaceState extends EstateFacilityState {
+  qualityId: ID;
+}
+
 export interface EstateState {
   level: number;
   exp: number;
   spiritFields: SpiritFieldState[];
   spiritVein: SpiritVeinState;
   gatheringArray: GatheringArrayState;
+  pillFurnace: PillFurnaceState;
 }
 
 export interface EstateUpgradeResult {

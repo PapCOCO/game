@@ -2,7 +2,8 @@ import { useState } from "react";
 import type { GameSaveData } from "../../game/types";
 import { RECIPES } from "../../game/config/recipes";
 import { ITEMS } from "../../game/config/items";
-import { calculateSuccessRate, getAlchemyLevelExpRequirement } from "../../game/core/alchemy";
+import { calculateSuccessRate, getAlchemyLevelExpRequirement, getRecipeSpiritStoneCost } from "../../game/core/alchemy";
+import { getPillFurnaceQuality } from "../../game/core/estate";
 import { useGameStore } from "../../game/state/gameStore";
 
 function getItemName(itemId: string): string {
@@ -16,10 +17,12 @@ function getInventoryQuantity(save: GameSaveData, itemId: string): number {
   return consumable?.quantity ?? 0;
 }
 
-export function AlchemyPanel({ save }: { save: GameSaveData }) {
+export function AlchemyPanel({ save, embedded = false }: { save: GameSaveData; embedded?: boolean }) {
   const { craftPillNow } = useGameStore();
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const alchemy = save.alchemy;
+  const furnaceLevel = save.estate.pillFurnace.level;
+  const furnace = getPillFurnaceQuality(furnaceLevel);
   const currentLevelReq = getAlchemyLevelExpRequirement(alchemy.level);
   const nextLevelReq = getAlchemyLevelExpRequirement(alchemy.level + 1);
   const levelProgress = alchemy.level >= 10 ? 1 : (alchemy.exp - currentLevelReq) / (nextLevelReq - currentLevelReq);
@@ -28,7 +31,7 @@ export function AlchemyPanel({ save }: { save: GameSaveData }) {
 
   function canCraft(recipe: typeof RECIPES[number]): boolean {
     if (alchemy.level < recipe.requiredAlchemyLevel) return false;
-    if (save.player.spiritStones < recipe.spiritStoneCost) return false;
+    if (save.player.spiritStones < getRecipeSpiritStoneCost(recipe, furnaceLevel)) return false;
     for (const material of recipe.materials) {
       if (getInventoryQuantity(save, material.itemId) < material.quantity) return false;
     }
@@ -36,10 +39,10 @@ export function AlchemyPanel({ save }: { save: GameSaveData }) {
   }
 
   return (
-    <section className="panel alchemy-panel">
+    <section className={embedded ? "estate-alchemy-section" : "panel alchemy-panel"}>
       <div className="panel-heading">
         <span className="eyebrow">Alchemy</span>
-        <h2>炼丹房</h2>
+        <h2>炼丹</h2>
       </div>
 
       <div className="alchemy-status">
@@ -61,11 +64,17 @@ export function AlchemyPanel({ save }: { save: GameSaveData }) {
           <span>成功 {alchemy.totalSuccesses}</span>
           <span>成功率 {alchemy.totalAttempts > 0 ? ((alchemy.totalSuccesses / alchemy.totalAttempts) * 100).toFixed(0) : 0}%</span>
         </div>
+        <div className="alchemy-stats-row">
+          <span>{furnace.name}</span>
+          <span>炉成 +{(furnace.successBonus * 100).toFixed(0)}%</span>
+          <span>省灵石 {furnace.costReductionPercent}%</span>
+        </div>
       </div>
 
       <div className="alchemy-recipe-list">
         {RECIPES.map((recipe) => {
-          const successRate = calculateSuccessRate(recipe, alchemy.level);
+          const successRate = calculateSuccessRate(recipe, alchemy.level, furnaceLevel);
+          const spiritStoneCost = getRecipeSpiritStoneCost(recipe, furnaceLevel);
           const craftable = canCraft(recipe);
           const isSelected = selectedRecipeId === recipe.id;
 
@@ -85,7 +94,7 @@ export function AlchemyPanel({ save }: { save: GameSaveData }) {
               <p className="alchemy-recipe-desc">{recipe.description}</p>
               <div className="alchemy-recipe-meta">
                 <span>成功率 {(successRate * 100).toFixed(0)}%</span>
-                <span>灵石 {recipe.spiritStoneCost}</span>
+                <span>灵石 {spiritStoneCost}</span>
               </div>
               {isSelected ? (
                 <div className="alchemy-materials">
@@ -135,7 +144,7 @@ export function AlchemyPanel({ save }: { save: GameSaveData }) {
           </div>
           <div className="alchemy-detail-cost">
             <span>灵石消耗</span>
-            <strong>{selectedRecipe.spiritStoneCost}</strong>
+            <strong>{getRecipeSpiritStoneCost(selectedRecipe, furnaceLevel)}</strong>
             <small>当前 {save.player.spiritStones}</small>
           </div>
           <button

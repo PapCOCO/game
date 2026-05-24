@@ -1,18 +1,21 @@
 import { useState } from "react";
 import type { GameSaveData } from "../../game/types";
 import { ESTATE_CONFIG } from "../../game/config/estate";
+import { ITEMS } from "../../game/config/items";
 import {
   getFieldHarvestTime,
   getFieldCropQuantity,
   getAvailableCrops,
   getVeinCultivationPerMinute,
   getGatheringBonusPercent,
+  getPillFurnaceQuality,
   calculateAccumulatedCultivation,
   isFieldReady,
   getFieldTimeRemaining,
   getEstateLevelFromExp
 } from "../../game/core/estate";
 import { useGameStore } from "../../game/state/gameStore";
+import { AlchemyPanel } from "./AlchemyPanel";
 
 function formatDuration(ms: number): string {
   if (ms <= 0) return "已成熟";
@@ -21,14 +24,18 @@ function formatDuration(ms: number): string {
   return `${minutes}分${seconds}秒`;
 }
 
-function getUpgradeCostText(facility: "spiritField" | "spiritVein" | "gatheringArray", currentLevel: number): string {
+function getItemName(itemId: string): string {
+  return ITEMS.find((item) => item.id === itemId)?.name ?? itemId;
+}
+
+function getUpgradeCostText(facility: "spiritField" | "spiritVein" | "gatheringArray" | "pillFurnace", currentLevel: number): string {
   const costs = ESTATE_CONFIG[facility].upgradeCosts;
   const cost = costs[currentLevel] ?? costs[costs.length - 1];
   if (cost === undefined) return "";
   const parts: string[] = [];
   if (cost.spiritStones > 0) parts.push(`${cost.spiritStones}灵石`);
   for (const mat of cost.materials) {
-    parts.push(`${mat.quantity}材料`);
+    parts.push(`${getItemName(mat.itemId)} x${mat.quantity}`);
   }
   return parts.join(" + ");
 }
@@ -50,6 +57,7 @@ export function EstatePanel({ save }: { save: GameSaveData }) {
   const levelProgress = estateLevel >= ESTATE_CONFIG.maxEstateLevel ? 1 : (estate.exp - currentLevelBase) / (nextLevelExp - currentLevelBase);
 
   const availableCrops = getAvailableCrops(estateLevel);
+  const furnace = getPillFurnaceQuality(estate.pillFurnace.level);
 
   return (
     <section className="panel estate-panel">
@@ -75,6 +83,34 @@ export function EstatePanel({ save }: { save: GameSaveData }) {
       </div>
 
       <div className="estate-facilities">
+        <h3>丹炉</h3>
+        <div className="estate-facility-card">
+          <div className="estate-facility-header">
+            <strong>{furnace.name}</strong>
+            <span>Lv.{estate.pillFurnace.level}</span>
+          </div>
+          <div className="estate-furnace-stats">
+            <span>成丹率 +{(furnace.successBonus * 100).toFixed(0)}%</span>
+            <span>灵石消耗 -{furnace.costReductionPercent}%</span>
+            <span>额外出丹 {(furnace.extraYieldChance * 100).toFixed(0)}%</span>
+            <span>炼丹经验 +{furnace.expBonusPercent}%</span>
+          </div>
+          {estate.pillFurnace.level < ESTATE_CONFIG.pillFurnace.maxLevel ? (
+            <div className="estate-upgrade-row">
+              <small>升级: {getUpgradeCostText("pillFurnace", estate.pillFurnace.level)}</small>
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => void upgradeEstateFacility("pillFurnace")}
+              >
+                升级
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <AlchemyPanel save={save} embedded />
+
         <h3>灵田</h3>
         <div className="estate-field-list">
           {estate.spiritFields.map((field, index) => {

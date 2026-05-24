@@ -4,6 +4,7 @@ import { ITEMS } from "../config/items";
 import { randomChance } from "./random";
 import { createId } from "./random";
 import { addItem } from "./inventory";
+import { getPillFurnaceQuality } from "./estate";
 
 const ALCHEMY_EXP_PER_ATTEMPT = 10;
 const ALCHEMY_EXP_PER_SUCCESS = 25;
@@ -24,7 +25,7 @@ export function getAlchemyLevelExpRequirement(level: number): number {
   return ALCHEMY_LEVEL_EXP_REQUIREMENTS[level] ?? ALCHEMY_LEVEL_EXP_REQUIREMENTS[10] * 2;
 }
 
-export function calculateSuccessRate(recipe: PillRecipe, alchemyLevel: number): number {
+export function calculateSuccessRate(recipe: PillRecipe, alchemyLevel: number, furnaceLevel = 1): number {
   const levelDiff = alchemyLevel - recipe.requiredAlchemyLevel;
   let bonus = 0;
 
@@ -40,7 +41,19 @@ export function calculateSuccessRate(recipe: PillRecipe, alchemyLevel: number): 
     bonus = levelDiff * 0.1;
   }
 
-  return Math.min(0.99, Math.max(0.1, recipe.baseSuccessRate + bonus));
+  const furnace = getPillFurnaceQuality(furnaceLevel);
+  return Math.min(0.99, Math.max(0.1, recipe.baseSuccessRate + bonus + furnace.successBonus));
+}
+
+export function getRecipeSpiritStoneCost(recipe: PillRecipe, furnaceLevel = 1): number {
+  const furnace = getPillFurnaceQuality(furnaceLevel);
+  const multiplier = 1 - furnace.costReductionPercent / 100;
+  return Math.max(1, Math.floor(recipe.spiritStoneCost * multiplier));
+}
+
+function getAlchemyExpGain(baseExp: number, furnaceLevel: number): number {
+  const furnace = getPillFurnaceQuality(furnaceLevel);
+  return Math.max(1, Math.round(baseExp * (1 + furnace.expBonusPercent / 100)));
 }
 
 function appendLog(save: GameSaveData, entry: GameLogEntry): GameLogEntry[] {
@@ -74,7 +87,11 @@ export function craftPill(save: GameSaveData, recipeId: string, now = Date.now()
     };
   }
 
-  if (save.player.spiritStones < recipe.spiritStoneCost) {
+  const furnaceLevel = save.estate.pillFurnace.level;
+  const furnace = getPillFurnaceQuality(furnaceLevel);
+  const spiritStoneCost = getRecipeSpiritStoneCost(recipe, furnaceLevel);
+
+  if (save.player.spiritStones < spiritStoneCost) {
     return { save, success: false, message: "灵石不足。" };
   }
 
@@ -95,7 +112,7 @@ export function craftPill(save: GameSaveData, recipeId: string, now = Date.now()
     ...save,
     player: {
       ...save.player,
-      spiritStones: save.player.spiritStones - recipe.spiritStoneCost
+      spiritStones: save.player.spiritStones - spiritStoneCost
     }
   };
 
@@ -127,20 +144,21 @@ export function craftPill(save: GameSaveData, recipeId: string, now = Date.now()
     }
   }
 
-  const successRate = calculateSuccessRate(recipe, nextSave.alchemy.level);
+  const successRate = calculateSuccessRate(recipe, nextSave.alchemy.level, furnaceLevel);
   const roll = randomChance(successRate);
 
   let newAlchemy: AlchemyState = {
     ...nextSave.alchemy,
     totalAttempts: nextSave.alchemy.totalAttempts + 1,
-    exp: nextSave.alchemy.exp + ALCHEMY_EXP_PER_ATTEMPT
+    exp: nextSave.alchemy.exp + getAlchemyExpGain(ALCHEMY_EXP_PER_ATTEMPT, furnaceLevel)
   };
 
   if (roll) {
+    const outputQuantity = 1 + (randomChance(furnace.extraYieldChance) ? 1 : 0);
     newAlchemy = {
       ...newAlchemy,
       totalSuccesses: newAlchemy.totalSuccesses + 1,
-      exp: newAlchemy.exp + ALCHEMY_EXP_PER_SUCCESS
+      exp: newAlchemy.exp + getAlchemyExpGain(ALCHEMY_EXP_PER_SUCCESS, furnaceLevel)
     };
 
     const currentLevelReq = getAlchemyLevelExpRequirement(newAlchemy.level);
@@ -156,13 +174,13 @@ export function craftPill(save: GameSaveData, recipeId: string, now = Date.now()
     nextSave = {
       ...nextSave,
       alchemy: newAlchemy,
-      inventory: addItem(nextSave.inventory, recipe.outputItemId, 1),
+      inventory: addItem(nextSave.inventory, recipe.outputItemId, outputQuantity),
       logs: {
         ...nextSave.logs,
         entries: appendLog(nextSave, {
           id: createId("log"),
           type: "alchemy",
-          message: `炼丹成功！获得 ${recipe.name}。`,
+          message: `以${furnace.name}炼丹成功，获得 ${recipe.name} x${outputQuantity}。`,
           createdAt: now
         })
       },
@@ -179,7 +197,7 @@ export function craftPill(save: GameSaveData, recipeId: string, now = Date.now()
     return {
       save: nextSave,
       success: true,
-      message: `炼丹成功！获得 ${recipe.name}。`
+      message: `炼丹成功！获得 ${recipe.name} x${outputQuantity}。`
     };
   }
 

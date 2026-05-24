@@ -24,7 +24,7 @@ import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
 import { craftPill } from "../core/alchemy";
 import { refreshMarket, buyItem, sellItem } from "../core/market";
-import { upgradeFacility, plantField, harvestField, collectVeinCultivation } from "../core/estate";
+import { upgradeFacility, plantField, harvestField, collectVeinCultivation, type EstateFacilityType } from "../core/estate";
 import type { OfflineRewardSummary } from "../types";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
@@ -54,7 +54,7 @@ interface GameStoreValue extends GameStoreState {
   refreshMarketNow: () => void;
   buyMarketItem: (marketItemId: string, quantity?: number) => Promise<void>;
   sellInventoryItem: (itemId: string, quantity?: number) => Promise<void>;
-  upgradeEstateFacility: (facilityType: "spiritField" | "spiritVein" | "gatheringArray", fieldIndex?: number) => Promise<void>;
+  upgradeEstateFacility: (facilityType: EstateFacilityType, fieldIndex?: number) => Promise<void>;
   plantEstateField: (fieldIndex: number, cropItemId: string) => Promise<void>;
   harvestEstateField: (fieldIndex: number) => Promise<void>;
   collectVeinCultivationNow: () => Promise<void>;
@@ -660,7 +660,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   );
 
   const upgradeEstateFacility = useCallback(
-    async (facilityType: "spiritField" | "spiritVein" | "gatheringArray", fieldIndex?: number) => {
+    async (facilityType: EstateFacilityType, fieldIndex?: number) => {
       if (state.save === null) {
         return;
       }
