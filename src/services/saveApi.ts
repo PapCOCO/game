@@ -1,30 +1,24 @@
 import type { GameSaveData } from "../game/types";
 import { deserializeSaveData, serializeSaveData } from "../game/save/serializeSave";
 
+const SAVE_KEY = "cultivation-idle-save";
+
 export async function loadGameSave(): Promise<GameSaveData | null> {
-  const result = await window.gameAPI.loadSave();
-
-  if (!result.ok) {
-    throw new Error(result.error);
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) {
+      return null;
+    }
+    return deserializeSaveData(raw);
+  } catch (error) {
+    throw new Error("加载存档失败");
   }
-
-  if (result.data === null) {
-    return null;
-  }
-
-  const raw = JSON.stringify(result.data);
-
-  if (raw === undefined) {
-    return null;
-  }
-
-  return deserializeSaveData(raw);
 }
 
 export async function saveGameSave(save: GameSaveData): Promise<void> {
-  const result = await window.gameAPI.writeSave(JSON.parse(serializeSaveData(save)));
-
-  if (!result.ok) {
-    throw new Error(result.error);
+  try {
+    localStorage.setItem(SAVE_KEY, serializeSaveData(save));
+  } catch (error) {
+    throw new Error("保存存档失败");
   }
 }
