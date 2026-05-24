@@ -8,7 +8,9 @@ export type GameLogType =
   | "drop"
   | "equipment"
   | "inventory"
-  | "offline";
+  | "offline"
+  | "alchemy"
+  | "market";
 
 export interface GameLogEntry {
   id: ID;

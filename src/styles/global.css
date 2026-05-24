@@ -1483,3 +1483,356 @@ h3 {
     font-size: 30px;
   }
 }
+
+.right-panel-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #39413c;
+  border-radius: 4px;
+  background: #121714;
+}
+
+.right-panel-tabs .tab-button {
+  flex: 1 1 0;
+  text-align: center;
+}
+
+.alchemy-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.alchemy-status {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #101512;
+  flex: 0 0 auto;
+}
+
+.alchemy-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.alchemy-level-row span:first-child {
+  color: #879084;
+  font-size: 11px;
+}
+
+.alchemy-level-row strong {
+  color: #d2a65a;
+  font-size: 14px;
+}
+
+.alchemy-exp {
+  color: #879084;
+  font-size: 11px;
+}
+
+.alchemy-stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #879084;
+  font-size: 11px;
+}
+
+.alchemy-recipe-list {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 8px;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.alchemy-recipe-row {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  color: #d8d0bf;
+  background: #101512;
+}
+
+.alchemy-recipe-row:hover {
+  border-color: #4a544d;
+  background: #151b17;
+}
+
+.alchemy-recipe-active {
+  border-color: #8b6b35;
+  background: #18170f;
+}
+
+.alchemy-recipe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.alchemy-recipe-header strong {
+  color: #d8d0bf;
+  font-size: 13px;
+}
+
+.alchemy-level-tag {
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: #7fb3a0;
+  font-size: 10px;
+  font-weight: 800;
+  background: #1a2420;
+}
+
+.alchemy-level-locked {
+  color: #b95c4a;
+  background: #2a1a18;
+}
+
+.alchemy-recipe-desc {
+  margin: 0;
+  color: #9da697;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.alchemy-recipe-meta {
+  display: flex;
+  gap: 12px;
+  color: #879084;
+  font-size: 11px;
+}
+
+.alchemy-materials {
+  display: grid;
+  gap: 3px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #252c28;
+}
+
+.alchemy-materials span {
+  color: #aeb8ac;
+  font-size: 12px;
+}
+
+.alchemy-material-missing {
+  color: #b95c4a !important;
+}
+
+.alchemy-detail {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #8b6b35;
+  border-radius: 4px;
+  background: #0f1411;
+}
+
+.alchemy-detail strong {
+  color: #d2a65a;
+}
+
+.alchemy-detail p {
+  margin: 0;
+  color: #9da697;
+  font-size: 12px;
+}
+
+.alchemy-detail-materials {
+  display: grid;
+  gap: 4px;
+}
+
+.alchemy-material-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 3px;
+  color: #aeb8ac;
+  font-size: 12px;
+  background: #101512;
+}
+
+.alchemy-detail-cost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 3px;
+  color: #d8d0bf;
+  background: #101512;
+}
+
+.alchemy-detail-cost strong {
+  color: #d2a65a;
+}
+
+.market-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.market-status {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #101512;
+  flex: 0 0 auto;
+}
+
+.market-ledger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #879084;
+  font-size: 12px;
+}
+
+.market-ledger strong {
+  color: #d2a65a;
+  font-size: 16px;
+}
+
+.market-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #879084;
+  font-size: 11px;
+}
+
+.market-item-list,
+.market-sell-list {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 6px;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.market-item-row,
+.market-sell-row {
+  display: grid;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #101512;
+}
+
+.market-item-row {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.market-sell-row {
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+}
+
+.market-item-info,
+.market-sell-info {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.market-item-info strong,
+.market-sell-info strong {
+  color: #d8d0bf;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.market-item-info span,
+.market-sell-info span {
+  color: #879084;
+  font-size: 11px;
+}
+
+.market-item-price,
+.market-sell-price {
+  text-align: right;
+}
+
+.market-item-price strong,
+.market-sell-price strong {
+  display: block;
+  color: #d2a65a;
+  font-size: 13px;
+}
+
+.market-item-price span,
+.market-sell-price span {
+  color: #879084;
+  font-size: 10px;
+}
+
+.market-item-stock {
+  color: #879084;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.market-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.market-qty-input {
+  width: 44px;
+  height: 26px;
+  padding: 0 4px;
+  border: 1px solid #4a544d;
+  border-radius: 3px;
+  color: #d8d0bf;
+  font-size: 12px;
+  text-align: center;
+  background: #151b17;
+}
+
+.market-qty-input::-webkit-outer-spin-button,
+.market-qty-input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.market-sell-section h4 {
+  margin: 8px 0 4px;
+  color: #7fb3a0;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.market-sell-section:first-child h4 {
+  margin-top: 0;
+}

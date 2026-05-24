@@ -22,6 +22,8 @@ import {
 } from "../core/equipment";
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
+import { craftPill } from "../core/alchemy";
+import { refreshMarket, buyItem, sellItem } from "../core/market";
 import type { OfflineRewardSummary } from "../types";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
@@ -47,6 +49,10 @@ interface GameStoreValue extends GameStoreState {
   discardEquipment: (instanceId: string) => Promise<void>;
   clearError: () => void;
   dismissOfflineReward: () => void;
+  craftPillNow: (recipeId: string) => Promise<void>;
+  refreshMarketNow: () => void;
+  buyMarketItem: (marketItemId: string, quantity?: number) => Promise<void>;
+  sellInventoryItem: (itemId: string, quantity?: number) => Promise<void>;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
@@ -540,6 +546,114 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const craftPillNow = useCallback(
+    async (recipeId: string) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = craftPill(state.save, recipeId);
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "炼丹后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
+  const refreshMarketNow = useCallback(() => {
+    setState((current) => {
+      if (current.save === null) {
+        return current;
+      }
+
+      const refreshed = refreshMarket(current.save.market);
+
+      return {
+        ...current,
+        save: {
+          ...current.save,
+          market: refreshed
+        }
+      };
+    });
+  }, []);
+
+  const buyMarketItem = useCallback(
+    async (marketItemId: string, quantity = 1) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = buyItem(state.save, marketItemId, quantity);
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "购买后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
+  const sellInventoryItem = useCallback(
+    async (itemId: string, quantity = 1) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = sellItem(state.save, itemId, quantity);
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "出售后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
   const value = useMemo<GameStoreValue>(
     () => ({
       ...state,
@@ -554,18 +668,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
       unequipSlotNow,
       discardEquipment,
       clearError,
-      dismissOfflineReward
+      dismissOfflineReward,
+      craftPillNow,
+      refreshMarketNow,
+      buyMarketItem,
+      sellInventoryItem
     }),
     [
       breakthroughNow,
+      buyMarketItem,
       changeMap,
       clearError,
+      craftPillNow,
       createCharacter,
       discardEquipment,
       dismissOfflineReward,
       equipItemNow,
       loadSave,
+      refreshMarketNow,
       saveNow,
+      sellInventoryItem,
       state,
       tick,
       toggleAutoBattleNow,

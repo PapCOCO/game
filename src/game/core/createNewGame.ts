@@ -109,6 +109,16 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
         lastSavedAt: now,
         lastActiveAt: now
       }
+    },
+    alchemy: {
+      level: 1,
+      exp: 0,
+      totalAttempts: 0,
+      totalSuccesses: 0
+    },
+    market: {
+      items: [],
+      lastRefreshedAt: now
     }
   };
 

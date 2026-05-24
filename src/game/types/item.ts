@@ -11,6 +11,8 @@ export interface ItemDefinition {
   rarity: Rarity;
   stackable: true;
   maxStack: number;
+  category?: "material" | "consumable" | "equipment";
+  value?: number;
 }
 
 export interface ItemStack {

@@ -73,6 +73,16 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
           maxHp: inputEnemy.maxHp
         }
       : undefined;
+  const alchemy = input.alchemy ?? {
+    level: 1,
+    exp: 0,
+    totalAttempts: 0,
+    totalSuccesses: 0
+  };
+  const market = input.market ?? {
+    items: [],
+    lastRefreshedAt: now
+  };
   const normalizedSave: GameSaveData = {
     ...input,
     player: {
@@ -142,6 +152,16 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
         lastSavedAt: runtimeTime.lastSavedAt ?? now,
         lastActiveAt: runtimeTime.lastActiveAt ?? now
       }
+    },
+    alchemy: {
+      level: alchemy.level ?? 1,
+      exp: alchemy.exp ?? 0,
+      totalAttempts: alchemy.totalAttempts ?? 0,
+      totalSuccesses: alchemy.totalSuccesses ?? 0
+    },
+    market: {
+      items: market.items ?? [],
+      lastRefreshedAt: market.lastRefreshedAt ?? now
     }
   };
 

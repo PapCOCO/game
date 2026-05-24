@@ -1,4 +1,4 @@
-import type { EquipmentInstance, GameSaveData, ItemStack } from "../types";
+import type { EquipmentInstance, GameSaveData, ItemStack, InventoryState } from "../types";
 import type { LootResult } from "./loot";
 import { ITEMS } from "../config";
 import { calculateFinalStats } from "./selectors";
@@ -86,6 +86,25 @@ export function addEquipments(
       ...save.inventory,
       equipments: [...save.inventory.equipments, ...acceptedEquipments]
     }
+  };
+}
+
+export function addItem(
+  inventory: InventoryState,
+  itemId: string,
+  quantity: number
+): InventoryState {
+  const section = getInventorySection(itemId);
+
+  if (section === null) {
+    return inventory;
+  }
+
+  const item: ItemStack = { itemId, quantity };
+
+  return {
+    ...inventory,
+    [section]: addToStacks(inventory[section], item)
   };
 }
 

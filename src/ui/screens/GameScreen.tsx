@@ -9,14 +9,19 @@ import { CultivationPanel } from "../panels/CultivationPanel";
 import { EquipmentPanel } from "../panels/EquipmentPanel";
 import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
+import { AlchemyPanel } from "../panels/AlchemyPanel";
+import { MarketPanel } from "../panels/MarketPanel";
 import { EscapeMenu } from "../components/EscapeMenu";
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
+
+type RightPanelTab = "inventory" | "alchemy";
 
 export function GameScreen() {
   const { breakthroughNow, noticeMessage, save, saveNow, toggleAutoBattleNow } = useGameStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [rightTab, setRightTab] = useState<RightPanelTab>("inventory");
 
   useGameLoop();
   useAutoSave();
@@ -94,8 +99,33 @@ export function GameScreen() {
         </section>
 
         <aside className="game-column right-column">
-          <EquipmentPanel save={save} />
-          <InventoryPanel save={save} />
+          <div className="right-panel-tabs" role="tablist" aria-label="右侧面板">
+            <button
+              className={rightTab === "inventory" ? "tab-button tab-button-active" : "tab-button"}
+              type="button"
+              onClick={() => setRightTab("inventory")}
+            >
+              装备行囊
+            </button>
+            <button
+              className={rightTab === "alchemy" ? "tab-button tab-button-active" : "tab-button"}
+              type="button"
+              onClick={() => setRightTab("alchemy")}
+            >
+              炼丹坊市
+            </button>
+          </div>
+          {rightTab === "inventory" ? (
+            <>
+              <EquipmentPanel save={save} />
+              <InventoryPanel save={save} />
+            </>
+          ) : (
+            <>
+              <AlchemyPanel save={save} />
+              <MarketPanel save={save} />
+            </>
+          )}
         </aside>
       </div>
 

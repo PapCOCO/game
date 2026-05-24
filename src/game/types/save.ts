@@ -4,6 +4,7 @@ import type { InventoryState } from "./item";
 import type { MapState } from "./map";
 import type { AutoBattleState } from "./monster";
 import type { GameLogState } from "./log";
+import type { AlchemyState, MarketState } from "./alchemy";
 
 export interface SaveMeta {
   version: SaveVersion;
@@ -35,4 +36,6 @@ export interface GameSaveData {
   logs: GameLogState;
   settings: GameSettingsState;
   runtime: GameRuntimeState;
+  alchemy: AlchemyState;
+  market: MarketState;
 }

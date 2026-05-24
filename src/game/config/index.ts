@@ -5,3 +5,5 @@ export * from "./items";
 export * from "./equipmentTemplates";
 export * from "./affixes";
 export * from "./dropTables";
+export * from "./recipes";
+export * from "./market";
