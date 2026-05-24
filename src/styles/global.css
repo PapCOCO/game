@@ -1836,3 +1836,201 @@ h3 {
 .market-sell-section:first-child h4 {
   margin-top: 0;
 }
+
+.estate-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.estate-status {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #101512;
+  flex: 0 0 auto;
+}
+
+.estate-level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.estate-level-row span:first-child {
+  color: #879084;
+  font-size: 11px;
+}
+
+.estate-level-row strong {
+  color: #d2a65a;
+  font-size: 14px;
+}
+
+.estate-exp {
+  color: #879084;
+  font-size: 11px;
+}
+
+.estate-facilities {
+  display: grid;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 8px;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.estate-facilities h3 {
+  margin: 6px 0 2px;
+  color: #7fb3a0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.estate-facilities h3:first-child {
+  margin-top: 0;
+}
+
+.estate-field-list {
+  display: grid;
+  gap: 6px;
+}
+
+.estate-field-card,
+.estate-facility-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #101512;
+}
+
+.estate-locked {
+  opacity: 0.7;
+}
+
+.estate-field-header,
+.estate-facility-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.estate-field-header strong,
+.estate-facility-header strong {
+  color: #d8d0bf;
+  font-size: 13px;
+}
+
+.estate-field-header span,
+.estate-facility-header span {
+  color: #879084;
+  font-size: 11px;
+}
+
+.estate-field-locked,
+.estate-field-empty,
+.estate-field-growing,
+.estate-unlock-row {
+  display: grid;
+  gap: 4px;
+}
+
+.estate-field-locked {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.estate-field-locked span {
+  color: #879084;
+  font-size: 12px;
+}
+
+.estate-field-empty span:first-child {
+  color: #879084;
+  font-size: 12px;
+}
+
+.estate-field-empty small {
+  color: #6a7268;
+  font-size: 11px;
+}
+
+.estate-plant-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.estate-crop-select {
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid #4a544d;
+  border-radius: 4px;
+  color: #d8d0bf;
+  font-size: 12px;
+  background: #151b17;
+}
+
+.estate-field-growing {
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.estate-crop-name {
+  color: #d8d0bf;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.estate-field-growing span {
+  color: #879084;
+  font-size: 11px;
+}
+
+.estate-ready {
+  color: #7fb3a0 !important;
+  font-weight: 800;
+}
+
+.estate-vein-stats,
+.estate-array-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #879084;
+  font-size: 12px;
+}
+
+.estate-upgrade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid #252c28;
+}
+
+.estate-upgrade-row small {
+  color: #6a7268;
+  font-size: 11px;
+}
+
+.estate-unlock-row {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.estate-unlock-row span {
+  color: #879084;
+  font-size: 12px;
+}

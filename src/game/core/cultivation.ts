@@ -1,11 +1,17 @@
 import type { GameSaveData } from "../types";
 import { calculateFinalStats, getCultivationRequired, getCurrentMap } from "./selectors";
 import { getNextRealm } from "./breakthrough";
+import { getGatheringBonusPercent } from "./estate";
 
 export function getCultivationGainPerSecond(save: GameSaveData): number {
   const finalStats = calculateFinalStats(save);
   const currentMap = getCurrentMap(save);
-  const gain = finalStats.cultivationSpeed + (currentMap?.baseCultivationPerSecond ?? 0);
+  let gain = finalStats.cultivationSpeed + (currentMap?.baseCultivationPerSecond ?? 0);
+
+  if (save.estate.gatheringArray.unlocked && save.estate.gatheringArray.level > 0) {
+    const bonus = getGatheringBonusPercent(save.estate.gatheringArray.level);
+    gain *= 1 + bonus / 100;
+  }
 
   return gain <= 0 ? 1 : gain;
 }

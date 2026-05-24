@@ -4,6 +4,7 @@ import { MONSTERS } from "../config";
 import { calculateFinalStats } from "../core/selectors";
 import { CURRENT_SAVE_VERSION } from "./saveVersion";
 import { validateSaveData } from "./validateSave";
+import { createInitialEstateState } from "../core/estate";
 
 export function migrateSaveData(input: unknown): GameSaveData | null {
   if (!validateSaveData(input)) {
@@ -83,6 +84,7 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     items: [],
     lastRefreshedAt: now
   };
+  const estate = input.estate ?? createInitialEstateState();
   const normalizedSave: GameSaveData = {
     ...input,
     player: {
@@ -162,7 +164,8 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
     market: {
       items: market.items ?? [],
       lastRefreshedAt: market.lastRefreshedAt ?? now
-    }
+    },
+    estate
   };
 
   const recalculatedStats = calculateFinalStats(normalizedSave);

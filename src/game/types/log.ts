@@ -10,7 +10,8 @@ export type GameLogType =
   | "inventory"
   | "offline"
   | "alchemy"
-  | "market";
+  | "market"
+  | "estate";
 
 export interface GameLogEntry {
   id: ID;

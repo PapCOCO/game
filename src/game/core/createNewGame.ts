@@ -5,6 +5,7 @@ import { CURRENT_SAVE_VERSION } from "../save/saveVersion";
 import { createId } from "./random";
 import { getUnlockedMapIdsByRealm } from "./mapUnlock";
 import { calculateFinalStats } from "./selectors";
+import { createInitialEstateState } from "./estate";
 
 function getFirstRealm(): RealmDefinition {
   const firstRealm = [...REALMS].sort((first, second) => first.order - second.order)[0];
@@ -119,7 +120,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
     market: {
       items: [],
       lastRefreshedAt: now
-    }
+    },
+    estate: createInitialEstateState()
   };
 
   save.player.finalStats = calculateFinalStats(save);

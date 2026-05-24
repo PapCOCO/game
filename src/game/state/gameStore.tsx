@@ -24,6 +24,7 @@ import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
 import { craftPill } from "../core/alchemy";
 import { refreshMarket, buyItem, sellItem } from "../core/market";
+import { upgradeFacility, plantField, harvestField, collectVeinCultivation } from "../core/estate";
 import type { OfflineRewardSummary } from "../types";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
@@ -53,6 +54,10 @@ interface GameStoreValue extends GameStoreState {
   refreshMarketNow: () => void;
   buyMarketItem: (marketItemId: string, quantity?: number) => Promise<void>;
   sellInventoryItem: (itemId: string, quantity?: number) => Promise<void>;
+  upgradeEstateFacility: (facilityType: "spiritField" | "spiritVein" | "gatheringArray", fieldIndex?: number) => Promise<void>;
+  plantEstateField: (fieldIndex: number, cropItemId: string) => Promise<void>;
+  harvestEstateField: (fieldIndex: number) => Promise<void>;
+  collectVeinCultivationNow: () => Promise<void>;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
@@ -654,6 +659,155 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [state]
   );
 
+  const upgradeEstateFacility = useCallback(
+    async (facilityType: "spiritField" | "spiritVein" | "gatheringArray", fieldIndex?: number) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = upgradeFacility(state.save, facilityType, fieldIndex);
+
+      if (!result.success) {
+        setState({
+          ...state,
+          noticeMessage: result.message
+        });
+        return;
+      }
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "洞府升级后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
+  const plantEstateField = useCallback(
+    async (fieldIndex: number, cropItemId: string) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = plantField(state.save, fieldIndex, cropItemId);
+
+      if (!result.success) {
+        setState({
+          ...state,
+          noticeMessage: result.message
+        });
+        return;
+      }
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "种植后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
+  const harvestEstateField = useCallback(
+    async (fieldIndex: number) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = harvestField(state.save, fieldIndex);
+
+      if (!result.success) {
+        setState({
+          ...state,
+          noticeMessage: result.message
+        });
+        return;
+      }
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "收获后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
+
+  const collectVeinCultivationNow = useCallback(async () => {
+    if (state.save === null) {
+      return;
+    }
+
+    const result = collectVeinCultivation(state.save);
+
+    if (!result.success) {
+      setState({
+        ...state,
+        noticeMessage: result.message
+      });
+      return;
+    }
+
+    setState({
+      save: result.save,
+      status: "ready",
+      noticeMessage: result.message,
+      offlineReward: null
+    });
+
+    try {
+      await saveGameSave(result.save);
+    } catch (error) {
+      setState({
+        save: result.save,
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "收取修为后保存失败",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+    }
+  }, [state]);
+
   const value = useMemo<GameStoreValue>(
     () => ({
       ...state,
@@ -672,26 +826,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
       craftPillNow,
       refreshMarketNow,
       buyMarketItem,
-      sellInventoryItem
+      sellInventoryItem,
+      upgradeEstateFacility,
+      plantEstateField,
+      harvestEstateField,
+      collectVeinCultivationNow
     }),
     [
       breakthroughNow,
       buyMarketItem,
       changeMap,
       clearError,
+      collectVeinCultivationNow,
       craftPillNow,
       createCharacter,
       discardEquipment,
       dismissOfflineReward,
       equipItemNow,
+      harvestEstateField,
       loadSave,
+      plantEstateField,
       refreshMarketNow,
       saveNow,
       sellInventoryItem,
       state,
       tick,
       toggleAutoBattleNow,
-      unequipSlotNow
+      unequipSlotNow,
+      upgradeEstateFacility
     ]
   );
 

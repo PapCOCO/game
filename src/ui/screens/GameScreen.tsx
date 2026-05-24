@@ -11,11 +11,13 @@ import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
 import { AlchemyPanel } from "../panels/AlchemyPanel";
 import { MarketPanel } from "../panels/MarketPanel";
+import { EstatePanel } from "../panels/EstatePanel";
 import { EscapeMenu } from "../components/EscapeMenu";
+
 import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
 
-type RightPanelTab = "inventory" | "alchemy";
+type RightPanelTab = "inventory" | "alchemy" | "estate";
 
 export function GameScreen() {
   const { breakthroughNow, noticeMessage, save, saveNow, toggleAutoBattleNow } = useGameStore();
@@ -114,17 +116,26 @@ export function GameScreen() {
             >
               炼丹坊市
             </button>
+            <button
+              className={rightTab === "estate" ? "tab-button tab-button-active" : "tab-button"}
+              type="button"
+              onClick={() => setRightTab("estate")}
+            >
+              洞府
+            </button>
           </div>
           {rightTab === "inventory" ? (
             <>
               <EquipmentPanel save={save} />
               <InventoryPanel save={save} />
             </>
-          ) : (
+          ) : rightTab === "alchemy" ? (
             <>
               <AlchemyPanel save={save} />
               <MarketPanel save={save} />
             </>
+          ) : (
+            <EstatePanel save={save} />
           )}
         </aside>
       </div>
