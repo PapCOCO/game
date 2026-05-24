@@ -28,6 +28,10 @@ export function GameScreen() {
   useGameLoop();
   useAutoSave();
 
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen((current) => !current);
+  }, []);
+
   if (save === null) {
     return null;
   }
@@ -37,9 +41,6 @@ export function GameScreen() {
   const playerPower = getPlayerPower(save);
   const nextRealm = getNextRealm(save);
   const breakthroughReady = canBreakthrough(save);
-  const toggleMenu = useCallback(() => {
-    setIsMenuOpen((current) => !current);
-  }, []);
 
   async function handleSaveNow() {
     setIsSaving(true);
