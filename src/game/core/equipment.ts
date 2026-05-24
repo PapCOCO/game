@@ -33,7 +33,7 @@ const SCORE_WEIGHTS: Record<keyof CoreStats, number> = {
   maxHp: 0.2,
   speed: 1.2,
   cultivationSpeed: 15,
-  spiritStoneBonus: 100
+  spiritStoneBonus: 5
 };
 
 function formatStatValue(stat: keyof CoreStats, value: number): string {
