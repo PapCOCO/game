@@ -62,7 +62,18 @@ export function EquipmentPanel({ save }: { save: GameSaveData }) {
               return (
                 <div className="equipped-line" key={slot}>
                   <span>{SLOT_LABELS[slot]}</span>
-                  <strong>{equipment?.name ?? "空"}</strong>
+                  <button
+                    className="equipped-name-button"
+                    disabled={equipment === undefined}
+                    type="button"
+                    onClick={() => {
+                      if (equipment !== undefined) {
+                        setSelectedId(equipment.instanceId);
+                      }
+                    }}
+                  >
+                    {equipment?.name ?? "空"}
+                  </button>
                   <button
                     className="text-button"
                     disabled={equipment === undefined}
@@ -103,14 +114,7 @@ export function EquipmentPanel({ save }: { save: GameSaveData }) {
                   {SLOT_LABELS[selectedEquipment.slot]} · {selectedEquipment.rarity} · 评分{" "}
                   {calculateEquipmentScore(selectedEquipment).toFixed(1)}
                 </p>
-                <p>{formatEquipmentStats(selectedEquipment)}</p>
-                <p>
-                  词条：
-                  {selectedEquipment.affixes.length > 0
-                    ? selectedEquipment.affixes.map((affix) => affix.name).join("、")
-                    : "无"}
-                </p>
-                <div className="detail-actions">
+                <div className="detail-actions detail-actions-top">
                   <button
                     className="primary-button compact-button"
                     disabled={equippedIds.has(selectedEquipment.instanceId)}
@@ -128,6 +132,13 @@ export function EquipmentPanel({ save }: { save: GameSaveData }) {
                     丢弃
                   </button>
                 </div>
+                <p>{formatEquipmentStats(selectedEquipment)}</p>
+                <p>
+                  词条：
+                  {selectedEquipment.affixes.length > 0
+                    ? selectedEquipment.affixes.map((affix) => affix.name).join("、")
+                    : "无"}
+                </p>
               </>
             )}
           </div>

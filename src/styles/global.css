@@ -1358,6 +1358,25 @@ h3 {
   white-space: nowrap;
 }
 
+.equipped-name-button {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  color: #d8d0bf;
+  cursor: pointer;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+}
+
+.equipped-name-button:hover:not(:disabled),
+.equipped-name-button:focus-visible {
+  color: #d2a65a;
+  outline: none;
+}
+
 .text-button {
   min-height: 24px;
   padding: 0 6px;
@@ -1436,6 +1455,12 @@ h3 {
   display: flex;
   gap: 8px;
   margin-top: 10px;
+}
+
+.detail-actions-top {
+  margin: 8px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #303832;
 }
 
 .tab-row {
@@ -1526,33 +1551,32 @@ h3 {
   font-size: 11px;
 }
 
-.item-hover-detail {
-  display: none;
-  grid-column: 1 / -1;
-  gap: 2px;
-  margin: 3px 0 4px;
-  padding: 6px 8px;
-  border: 1px solid #4a544d;
-  border-radius: 4px;
-  color: #c7c0ae;
-  background: #0f1411;
-}
-
-.inventory-compact-row:hover .item-hover-detail,
-.inventory-compact-row:focus-visible .item-hover-detail {
+.floating-item-detail {
+  position: fixed;
+  z-index: 1000;
   display: grid;
+  gap: 3px;
+  width: 280px;
+  max-width: calc(100vw - 24px);
+  padding: 9px 10px;
+  border: 1px solid #8b6b35;
+  border-radius: 4px;
+  color: #d8d0bf;
+  pointer-events: none;
+  background: #0b100d;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
-.item-hover-detail strong {
+.floating-item-detail strong {
   color: #d2a65a;
 }
 
-.item-hover-detail span,
-.item-hover-detail p {
+.floating-item-detail span,
+.floating-item-detail p {
   margin: 0;
   color: #c7c0ae;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 @media (max-width: 960px) {

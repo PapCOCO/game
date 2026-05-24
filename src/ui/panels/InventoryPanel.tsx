@@ -32,9 +32,19 @@ function getStacks(save: GameSaveData, tab: InventoryTab): ItemStack[] {
   return save.inventory.currencies;
 }
 
+function getTooltipPosition(clientX: number, clientY: number) {
+  return {
+    x: Math.min(clientX + 16, window.innerWidth - 300),
+    y: Math.min(clientY + 12, window.innerHeight - 170)
+  };
+}
+
 export function InventoryPanel({ save }: { save: GameSaveData }) {
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
+  const [hoveredStack, setHoveredStack] = useState<ItemStack | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const stacks = getStacks(save, activeTab);
+  const hoveredItem = hoveredStack === null ? undefined : getItemDefinition(hoveredStack.itemId);
 
   return (
     <section className="panel inventory-panel text-panel">
@@ -74,23 +84,42 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
                   className="inventory-compact-row"
                   key={stack.itemId}
                   type="button"
+                  onBlur={() => setHoveredStack(null)}
+                  onFocus={(event) => {
+                    const rect = event.currentTarget.getBoundingClientRect();
+                    setHoveredStack(stack);
+                    setTooltipPosition(getTooltipPosition(rect.right, rect.top));
+                  }}
+                  onMouseEnter={(event) => {
+                    setHoveredStack(stack);
+                    setTooltipPosition(getTooltipPosition(event.clientX, event.clientY));
+                  }}
+                  onMouseLeave={() => setHoveredStack(null)}
+                  onMouseMove={(event) => setTooltipPosition(getTooltipPosition(event.clientX, event.clientY))}
                 >
                   <span className="inventory-item-name">{item?.name ?? stack.itemId}</span>
                   <span className="inventory-item-meta">{item?.rarity ?? "未知"} · x{stack.quantity}</span>
-                  <div className="item-hover-detail" role="tooltip">
-                    <strong>{item?.name ?? stack.itemId}</strong>
-                    <span>
-                      {item === undefined ? "未知" : `${ITEM_TYPE_LABELS[item.type]} · ${item.rarity}`}
-                    </span>
-                    <span>数量：{stack.quantity}</span>
-                    <p>{item?.description ?? "无描述。"}</p>
-                  </div>
                 </button>
               );
             })
           )}
         </div>
       </div>
+
+      {hoveredStack !== null ? (
+        <div
+          className="floating-item-detail"
+          role="tooltip"
+          style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
+        >
+          <strong>{hoveredItem?.name ?? hoveredStack.itemId}</strong>
+          <span>
+            {hoveredItem === undefined ? "未知" : `${ITEM_TYPE_LABELS[hoveredItem.type]} · ${hoveredItem.rarity}`}
+          </span>
+          <span>数量：{hoveredStack.quantity}</span>
+          <p>{hoveredItem?.description ?? "无描述。"}</p>
+        </div>
+      ) : null}
     </section>
   );
 }
