@@ -8,13 +8,18 @@ import {
   useRef,
   useState
 } from "react";
-import type { GameLogEntry, GameSaveData } from "../types";
+import type { EquipmentSlot, GameLogEntry, GameLogType, GameSaveData } from "../types";
 import { createNewGame } from "../core/createNewGame";
 import { breakthrough } from "../core/breakthrough";
 import { tickGame } from "../core/tick";
 import { isMapUnlocked } from "../core/mapUnlock";
 import { MAPS } from "../config";
 import { createId } from "../core/random";
+import {
+  canEquip,
+  equipItem as equipCoreItem,
+  unequipItem as unequipCoreItem
+} from "../core/equipment";
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
@@ -33,15 +38,23 @@ interface GameStoreValue extends GameStoreState {
   tick: () => void;
   breakthroughNow: () => Promise<void>;
   changeMap: (mapId: string) => Promise<void>;
+  equipItemNow: (instanceId: string) => Promise<void>;
+  unequipSlotNow: (slot: EquipmentSlot) => Promise<void>;
+  discardEquipment: (instanceId: string) => Promise<void>;
   clearError: () => void;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
 
-function appendSystemLog(save: GameSaveData, message: string, now: number): GameSaveData {
+function appendLog(
+  save: GameSaveData,
+  type: GameLogType,
+  message: string,
+  now: number
+): GameSaveData {
   const entry: GameLogEntry = {
     id: createId("log"),
-    type: "system",
+    type,
     message,
     createdAt: now
   };
@@ -53,6 +66,10 @@ function appendSystemLog(save: GameSaveData, message: string, now: number): Game
       entries: [entry, ...save.logs.entries].slice(0, save.logs.maxEntries)
     }
   };
+}
+
+function appendSystemLog(save: GameSaveData, message: string, now: number): GameSaveData {
+  return appendLog(save, "system", message, now);
 }
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -258,6 +275,145 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [state]
   );
 
+  const equipItemNow = useCallback(
+    async (instanceId: string) => {
+      if (state.save === null) {
+        return;
+      }
+
+      if (!canEquip(state.save, instanceId)) {
+        setState({
+          ...state,
+          noticeMessage: "该装备不存在。"
+        });
+        return;
+      }
+
+      const nextSave = equipCoreItem(state.save, instanceId);
+
+      setState({
+        save: nextSave,
+        status: "ready",
+        noticeMessage: "装备已穿戴。"
+      });
+
+      try {
+        await saveGameSave(nextSave);
+      } catch (error) {
+        setState({
+          save: nextSave,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "穿戴装备后保存失败",
+          noticeMessage: "装备已穿戴。"
+        });
+      }
+    },
+    [state]
+  );
+
+  const unequipSlotNow = useCallback(
+    async (slot: EquipmentSlot) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const nextSave = unequipCoreItem(state.save, slot);
+
+      setState({
+        save: nextSave,
+        status: "ready",
+        noticeMessage: "装备已卸下。"
+      });
+
+      try {
+        await saveGameSave(nextSave);
+      } catch (error) {
+        setState({
+          save: nextSave,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "卸下装备后保存失败",
+          noticeMessage: "装备已卸下。"
+        });
+      }
+    },
+    [state]
+  );
+
+  const discardEquipment = useCallback(
+    async (instanceId: string) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const equippedInstanceIds = Object.values(state.save.player.equipped);
+
+      if (equippedInstanceIds.includes(instanceId)) {
+        setState({
+          ...state,
+          noticeMessage: "已装备的装备不能丢弃。"
+        });
+        return;
+      }
+
+      const equipment = state.save.inventory.equipments.find(
+        (item) => item.instanceId === instanceId
+      );
+
+      if (equipment === undefined) {
+        setState({
+          ...state,
+          noticeMessage: "该装备不存在。"
+        });
+        return;
+      }
+
+      const now = Date.now();
+      const nextSave = appendLog(
+        {
+          ...state.save,
+          meta: {
+            ...state.save.meta,
+            updatedAt: now
+          },
+          inventory: {
+            ...state.save.inventory,
+            equipments: state.save.inventory.equipments.filter(
+              (item) => item.instanceId !== instanceId
+            )
+          },
+          runtime: {
+            ...state.save.runtime,
+            time: {
+              ...state.save.runtime.time,
+              updatedAt: now
+            }
+          }
+        },
+        "equipment",
+        `已丢弃${equipment.name}。`,
+        now
+      );
+
+      setState({
+        save: nextSave,
+        status: "ready",
+        noticeMessage: `已丢弃${equipment.name}。`
+      });
+
+      try {
+        await saveGameSave(nextSave);
+      } catch (error) {
+        setState({
+          save: nextSave,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "丢弃装备后保存失败",
+          noticeMessage: `已丢弃${equipment.name}。`
+        });
+      }
+    },
+    [state]
+  );
+
   const clearError = useCallback(() => {
     setState((current) => ({
       save: current.save,
@@ -275,9 +431,24 @@ export function GameProvider({ children }: { children: ReactNode }) {
       tick,
       breakthroughNow,
       changeMap,
+      equipItemNow,
+      unequipSlotNow,
+      discardEquipment,
       clearError
     }),
-    [breakthroughNow, changeMap, clearError, createCharacter, loadSave, saveNow, state, tick]
+    [
+      breakthroughNow,
+      changeMap,
+      clearError,
+      createCharacter,
+      discardEquipment,
+      equipItemNow,
+      loadSave,
+      saveNow,
+      state,
+      tick,
+      unequipSlotNow
+    ]
   );
 
   return <GameStoreContext.Provider value={value}>{children}</GameStoreContext.Provider>;

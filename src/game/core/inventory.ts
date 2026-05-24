@@ -1,6 +1,7 @@
 import type { EquipmentInstance, GameSaveData, ItemStack } from "../types";
 import type { LootResult } from "./loot";
 import { ITEMS } from "../config";
+import { calculateFinalStats } from "./selectors";
 
 type InventoryItemSection = "materials" | "consumables" | "currencies";
 
@@ -91,12 +92,14 @@ export function addEquipments(
 export function applyLootToSave(save: GameSaveData, loot: LootResult, now = Date.now()): GameSaveData {
   const saveWithItems = addItemStacks(save, loot.items);
   const saveWithEquipments = addEquipments(saveWithItems, loot.equipments);
+  const finalStats = calculateFinalStats(saveWithEquipments);
+  const spiritStoneGain = Math.floor(loot.spiritStones * (1 + finalStats.spiritStoneBonus));
 
   return {
     ...saveWithEquipments,
     player: {
       ...saveWithEquipments.player,
-      spiritStones: saveWithEquipments.player.spiritStones + loot.spiritStones,
+      spiritStones: saveWithEquipments.player.spiritStones + spiritStoneGain,
       cultivation: {
         ...saveWithEquipments.player.cultivation,
         currentCultivation:

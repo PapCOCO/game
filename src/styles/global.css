@@ -43,7 +43,7 @@ button:disabled {
   width: 100%;
   height: 100vh;
   min-height: 100vh;
-  padding: 28px;
+  padding: 14px;
   overflow: hidden;
   background:
     radial-gradient(circle at 18% 8%, rgba(188, 138, 62, 0.18), transparent 28%),
@@ -182,79 +182,156 @@ h3 {
 }
 
 .game-shell {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
 }
 
 .game-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(360px, 1.4fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  width: min(1160px, 100%);
-  margin: 0 auto;
+  gap: 14px;
+  min-height: 72px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 8px;
+  background: rgba(22, 22, 28, 0.72);
+}
+
+.topbar-title {
+  min-width: 0;
+}
+
+.topbar-title h1 {
+  font-size: 28px;
+  white-space: nowrap;
+}
+
+.topbar-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar-stat {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.topbar-stat span,
+.topbar-stat strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-stat span {
+  color: #9d9587;
+  font-size: 11px;
+}
+
+.topbar-stat strong {
+  margin-top: 3px;
+  color: #f5f1e8;
+  font-size: 16px;
 }
 
 .save-controls {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
+  min-width: 0;
   color: #b4ad9e;
   font-size: 14px;
 }
 
-.game-grid {
+.save-controls span {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-  gap: 18px;
-  width: min(1160px, 100%);
-  margin: 0 auto;
+  grid-template-columns: minmax(285px, 0.95fr) minmax(360px, 1.25fr) minmax(320px, 1fr);
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.game-column {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.left-column {
+  grid-template-rows: minmax(190px, 0.9fr) minmax(185px, 0.8fr) minmax(0, 1fr);
+}
+
+.center-column {
+  grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr);
+}
+
+.right-column {
+  grid-template-rows: minmax(240px, 0.8fr) minmax(0, 1.2fr);
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 22px;
+  min-height: 0;
+  padding: 14px;
+  overflow: hidden;
   border: 1px solid rgba(245, 241, 232, 0.12);
   border-radius: 8px;
   background: rgba(22, 22, 28, 0.86);
 }
 
-.character-panel {
-  grid-row: span 2;
-}
-
-.inventory-panel {
-  grid-column: 1 / -1;
-}
-
 .panel-heading {
   display: grid;
   gap: 4px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  flex: 0 0 auto;
+}
+
+.panel-heading .eyebrow {
+  margin: 0;
 }
 
 .summary-row,
 .stat-grid {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .summary-row {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .stat-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .stat-block {
   min-width: 0;
-  padding: 12px;
+  padding: 9px;
   border: 1px solid rgba(245, 241, 232, 0.1);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
@@ -267,13 +344,13 @@ h3 {
 
 .stat-label {
   color: #9d9587;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .stat-value {
-  margin-top: 6px;
+  margin-top: 4px;
   color: #f5f1e8;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -294,14 +371,17 @@ h3 {
 
 .map-list {
   display: grid;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 12px;
+  overflow: auto;
 }
 
 .map-item {
   display: grid;
   gap: 4px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid rgba(245, 241, 232, 0.1);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.04);
@@ -327,12 +407,12 @@ h3 {
 .map-item p {
   margin: 4px 0;
   color: #b4ad9e;
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .map-button {
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 12px;
   flex: 0 0 auto;
 }
@@ -345,13 +425,14 @@ h3 {
 .inventory-list,
 .equipment-list {
   display: grid;
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .log-list {
-  max-height: 260px;
-  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .log-item,
@@ -363,7 +444,7 @@ h3 {
 }
 
 .log-item {
-  padding: 10px 12px;
+  padding: 8px 10px;
 }
 
 .log-item span {
@@ -378,18 +459,66 @@ h3 {
 .equipment-item p {
   margin: 4px 0 0;
   color: #d8d0c0;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.combat-panel .log-list,
+.log-panel .log-list {
+  flex: 1 1 auto;
+}
+
+.combat-section {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.monster-pool {
+  display: grid;
+  gap: 6px;
+}
+
+.monster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.monster-row span {
+  color: #f5f1e8;
+  font-weight: 800;
+}
+
+.monster-row small {
+  color: #aaa296;
+}
+
+.inventory-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .inventory-section {
   display: grid;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.inventory-section:first-child {
+  margin-top: 0;
 }
 
 .spirit-stone-count {
   color: #f5f1e8;
-  font-size: 28px;
+  font-size: 24px;
 }
 
 .inventory-row {
@@ -397,23 +526,38 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 9px 10px;
+}
+
+.inventory-row div {
+  min-width: 0;
 }
 
 .inventory-row span,
+.inventory-row strong,
+.inventory-row small {
+  display: block;
+}
+
 .inventory-row strong {
   color: #f5f1e8;
 }
 
+.inventory-row small {
+  margin-top: 3px;
+  color: #aaa296;
+  font-size: 11px;
+}
+
 .equipment-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .equipment-item {
   display: grid;
   gap: 6px;
   min-width: 0;
-  padding: 12px;
+  padding: 10px;
 }
 
 .equipment-header {
@@ -427,10 +571,64 @@ h3 {
   color: #f5f1e8;
 }
 
+.equipment-header span {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+
+.equipment-meta-row,
+.equipment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.equipment-meta-row {
+  justify-content: space-between;
+}
+
+.equipment-actions {
+  margin-top: 4px;
+}
+
 .equipment-header span,
 .equipment-item small,
 .muted-text {
   color: #aaa296;
+}
+
+.equipment-slot-list {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.equipment-slot {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(245, 241, 232, 0.1);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.equipment-slot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.compact-button {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.compact-equipment {
+  padding: 9px;
 }
 
 .rarity-common {
@@ -479,19 +677,25 @@ h3 {
 
 @media (max-width: 860px) {
   .app-shell {
-    padding: 20px;
+    padding: 12px;
   }
 
   .game-header,
-  .save-controls {
-    align-items: flex-start;
-    flex-direction: column;
+  .desktop-layout,
+  .topbar-meta {
+    grid-template-columns: 1fr;
   }
 
-  .game-grid,
+  .game-header {
+    align-items: stretch;
+  }
+
+  .save-controls {
+    justify-content: flex-start;
+  }
+
   .summary-row,
-  .stat-grid,
-  .equipment-list {
+  .stat-grid {
     grid-template-columns: 1fr;
   }
 

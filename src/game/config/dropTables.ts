@@ -26,9 +26,9 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.SPIRIT_GRASS, quantity: { min: 1, max: 1 }, dropRate: 0.18 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.IRON_SWORD, dropRate: 0.025 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOTH_ROBE, dropRate: 0.03 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.COPPER_RING, dropRate: 0.015 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.IRON_SWORD, dropRate: 0.12 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOTH_ROBE, dropRate: 0.12 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.COPPER_RING, dropRate: 0.08 }
     ]
   },
   [DROP_TABLE_IDS.QINGSHI_HERB_GUARD]: {
@@ -40,8 +40,8 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.QI_GATHERING_PILL, quantity: { min: 1, max: 1 }, dropRate: 0.06 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.WOODEN_AMULET, dropRate: 0.025 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.SPIRIT_GATHERING_RING, dropRate: 0.012 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.WOODEN_AMULET, dropRate: 0.1 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.SPIRIT_GATHERING_RING, dropRate: 0.05 }
     ]
   },
   [DROP_TABLE_IDS.QINGSHI_DEEP_BEAST]: {
@@ -53,9 +53,9 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 1 }, dropRate: 0.04 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.QINGSHI_BLADE, dropRate: 0.025 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.HIDE_ARMOR, dropRate: 0.03 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.JADE_AMULET, dropRate: 0.018 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.QINGSHI_BLADE, dropRate: 0.08 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.HIDE_ARMOR, dropRate: 0.08 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.JADE_AMULET, dropRate: 0.05 }
     ]
   },
   [DROP_TABLE_IDS.BLACKWIND_SCOUT]: {
@@ -67,8 +67,8 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.SPIRIT_STONE_SHARD, quantity: { min: 1, max: 4 }, dropRate: 0.25 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_SABER, dropRate: 0.02 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_RING, dropRate: 0.012 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_SABER, dropRate: 0.055 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_RING, dropRate: 0.035 }
     ]
   },
   [DROP_TABLE_IDS.BLACKWIND_ELITE]: {
@@ -80,9 +80,9 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 1 }, dropRate: 0.06 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_SABER, dropRate: 0.032 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_RING, dropRate: 0.02 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.012 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_SABER, dropRate: 0.065 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.BLACKWIND_RING, dropRate: 0.04 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.03 }
     ]
   },
   [DROP_TABLE_IDS.MINE_BEAST]: {
@@ -94,8 +94,8 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 1 }, dropRate: 0.04 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.QINGSHI_BLADE, dropRate: 0.02 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.025 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.QINGSHI_BLADE, dropRate: 0.055 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.06 }
     ]
   },
   [DROP_TABLE_IDS.MINE_SPIRIT]: {
@@ -107,8 +107,8 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 1 }, dropRate: 0.08 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.03 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MIST_AMULET, dropRate: 0.014 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MINER_SCALE_ARMOR, dropRate: 0.065 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MIST_AMULET, dropRate: 0.035 }
     ]
   },
   [DROP_TABLE_IDS.MIST_INSECT]: {
@@ -120,9 +120,9 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 1 }, dropRate: 0.1 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MISTLIGHT_SWORD, dropRate: 0.018 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOUD_PATTERN_ROBE, dropRate: 0.018 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MIST_AMULET, dropRate: 0.025 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MISTLIGHT_SWORD, dropRate: 0.045 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOUD_PATTERN_ROBE, dropRate: 0.045 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MIST_AMULET, dropRate: 0.055 }
     ]
   },
   [DROP_TABLE_IDS.MIST_SPIRIT]: {
@@ -134,9 +134,9 @@ export const DROP_TABLES: Record<DropTableId, MonsterDropTable> = {
       { itemId: ITEM_IDS.LOW_SPIRIT_CORE, quantity: { min: 1, max: 2 }, dropRate: 0.14 }
     ],
     equipments: [
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MISTLIGHT_SWORD, dropRate: 0.03 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOUD_PATTERN_ROBE, dropRate: 0.026 },
-      { equipmentId: EQUIPMENT_TEMPLATE_IDS.FOUNDATION_SEED_RING, dropRate: 0.006 }
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.MISTLIGHT_SWORD, dropRate: 0.06 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.CLOUD_PATTERN_ROBE, dropRate: 0.055 },
+      { equipmentId: EQUIPMENT_TEMPLATE_IDS.FOUNDATION_SEED_RING, dropRate: 0.018 }
     ]
   }
 };
