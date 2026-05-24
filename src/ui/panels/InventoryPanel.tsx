@@ -4,7 +4,8 @@ import type {
   EquipmentSlot,
   GameSaveData,
   ItemStack,
-  ItemType
+  ItemType,
+  Rarity
 } from "../../game/types";
 import { ITEMS, ENHANCEMENT_CONFIG, MAX_ENHANCEMENT_LEVEL } from "../../game/config";
 import { calculateEquipmentScore, formatEquipmentStats } from "../../game/core/equipment";
@@ -13,6 +14,7 @@ import { useGameStore } from "../../game/state/gameStore";
 
 type InventoryTab = "materials" | "consumables" | "currencies" | "equipments";
 type EquipmentFilter = "all" | EquipmentSlot;
+type EquipmentSort = "score" | "rarity" | "enhancement" | "createdAt";
 type SelectedEntry =
   | { kind: "item"; stack: ItemStack }
   | { kind: "equipment"; equipment: EquipmentInstance }
@@ -52,6 +54,21 @@ const EQUIPMENT_FILTER_LABELS: Record<EquipmentFilter, string> = {
   armor: "护甲",
   amulet: "护符",
   ring: "戒指"
+};
+
+const EQUIPMENT_SORT_LABELS: Record<EquipmentSort, string> = {
+  score: "评分",
+  rarity: "稀有度",
+  enhancement: "强化",
+  createdAt: "获得时间"
+};
+
+const RARITY_ORDER: Record<Rarity, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5
 };
 
 function getItemDefinition(itemId: string) {
@@ -193,18 +210,48 @@ function ItemDetail({ stack }: { stack: ItemStack }) {
 }
 
 export function InventoryPanel({ save }: { save: GameSaveData }) {
+  const { cleanupLowScoreEquipments } = useGameStore();
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
   const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilter>("all");
+  const [equipmentSort, setEquipmentSort] = useState<EquipmentSort>("score");
   const [selectedEntry, setSelectedEntry] = useState<SelectedEntry>(null);
   const equippedIds = new Set(Object.values(save.player.equipped));
   const unequippedEquipments = save.inventory.equipments.filter(
     (equipment) => !equippedIds.has(equipment.instanceId)
   );
-  const visibleEquipments =
+  const filteredEquipments =
     equipmentFilter === "all"
       ? unequippedEquipments
       : unequippedEquipments.filter((equipment) => equipment.slot === equipmentFilter);
+  const visibleEquipments = [...filteredEquipments].sort((first, second) => {
+    if (equipmentSort === "score") {
+      return calculateEquipmentScore(second) - calculateEquipmentScore(first);
+    }
+
+    if (equipmentSort === "rarity") {
+      return RARITY_ORDER[second.rarity] - RARITY_ORDER[first.rarity];
+    }
+
+    if (equipmentSort === "enhancement") {
+      return (second.enhancement ?? 0) - (first.enhancement ?? 0);
+    }
+
+    return second.createdAt - first.createdAt;
+  });
   const stacks = activeTab === "equipments" ? [] : getStacks(save, activeTab);
+
+  function handleCleanupLowScore() {
+    const confirmed = window.confirm("将丢弃未穿戴、未锁定、评分不高于 30 的装备，并保留稀有及以上装备，是否继续？");
+
+    if (!confirmed) {
+      return;
+    }
+
+    void cleanupLowScoreEquipments({
+      maxScore: 30,
+      keepRarityAtOrAbove: "rare"
+    });
+  }
 
   useEffect(() => {
     if (activeTab === "equipments") {
@@ -275,20 +322,40 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
         </div>
 
         {activeTab === "equipments" ? (
-          <div className="subtab-row" role="tablist" aria-label="装备细分">
-            {(Object.keys(EQUIPMENT_FILTER_LABELS) as EquipmentFilter[]).map((filter) => (
-              <button
-                className={filter === equipmentFilter ? "subtab-button subtab-button-active" : "subtab-button"}
-                key={filter}
-                type="button"
-                onClick={() => {
-                  setEquipmentFilter(filter);
-                  setSelectedEntry(null);
-                }}
-              >
-                {EQUIPMENT_FILTER_LABELS[filter]}
+          <div className="inventory-equipment-tools">
+            <div className="subtab-row" role="tablist" aria-label="装备细分">
+              {(Object.keys(EQUIPMENT_FILTER_LABELS) as EquipmentFilter[]).map((filter) => (
+                <button
+                  className={filter === equipmentFilter ? "subtab-button subtab-button-active" : "subtab-button"}
+                  key={filter}
+                  type="button"
+                  onClick={() => {
+                    setEquipmentFilter(filter);
+                    setSelectedEntry(null);
+                  }}
+                >
+                  {EQUIPMENT_FILTER_LABELS[filter]}
+                </button>
+              ))}
+            </div>
+            <div className="inventory-sort-row">
+              <label>
+                <span>排序</span>
+                <select
+                  value={equipmentSort}
+                  onChange={(event) => setEquipmentSort(event.target.value as EquipmentSort)}
+                >
+                  {(Object.keys(EQUIPMENT_SORT_LABELS) as EquipmentSort[]).map((sort) => (
+                    <option key={sort} value={sort}>
+                      {EQUIPMENT_SORT_LABELS[sort]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button className="text-button" type="button" onClick={handleCleanupLowScore}>
+                清理低分装备
               </button>
-            ))}
+            </div>
           </div>
         ) : null}
 

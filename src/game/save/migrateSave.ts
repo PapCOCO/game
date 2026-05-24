@@ -7,6 +7,7 @@ import { CURRENT_SAVE_VERSION } from "./saveVersion";
 import { validateSaveData } from "./validateSave";
 import { createInitialEstateState } from "../core/estate";
 import { normalizeTechniqueState } from "../core/technique";
+import { createInitialObjectiveState, normalizeObjectiveState } from "../core/objectives";
 
 function getFirstUnlockedMapId(unlockedMapIds: string[]): string {
   const unlockedSet = new Set(unlockedMapIds);
@@ -171,7 +172,8 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       defeatedCount: input.autoBattle?.defeatedCount ?? 0,
       recoveringUntil: input.autoBattle?.recoveringUntil,
       playerActionProgress: Math.min(Math.max(0, input.autoBattle?.playerActionProgress ?? 0), 100),
-      enemyActionProgress: Math.min(Math.max(0, input.autoBattle?.enemyActionProgress ?? 0), 100)
+      enemyActionProgress: Math.min(Math.max(0, input.autoBattle?.enemyActionProgress ?? 0), 100),
+      recentEvents: (input.autoBattle?.recentEvents ?? []).slice(0, 8)
     },
     logs: {
       ...logs,
@@ -206,25 +208,30 @@ export function migrateSaveData(input: unknown): GameSaveData | null {
       lastRefreshedAt: market.lastRefreshedAt ?? now
     },
     estate: normalizedEstate,
-    techniques: normalizeTechniqueState(input.techniques)
+    techniques: normalizeTechniqueState(input.techniques),
+    objectives: createInitialObjectiveState()
   };
 
-  const unlockedMapIds = getUnlockedMapIds(normalizedSave);
-  const currentMapId = unlockedMapIds.includes(normalizedSave.map.currentMapId)
-    ? normalizedSave.map.currentMapId
+  const saveWithObjectives: GameSaveData = {
+    ...normalizedSave,
+    objectives: normalizeObjectiveState(input.objectives, normalizedSave)
+  };
+  const unlockedMapIds = getUnlockedMapIds(saveWithObjectives);
+  const currentMapId = unlockedMapIds.includes(saveWithObjectives.map.currentMapId)
+    ? saveWithObjectives.map.currentMapId
     : getFirstUnlockedMapId(unlockedMapIds);
   const saveWithUnlockedMaps: GameSaveData = {
-    ...normalizedSave,
+    ...saveWithObjectives,
     player: {
-      ...normalizedSave.player,
+      ...saveWithObjectives.player,
       progress: {
-        ...normalizedSave.player.progress,
+        ...saveWithObjectives.player.progress,
         unlockedMapIds,
         currentMapId
       }
     },
     map: {
-      ...normalizedSave.map,
+      ...saveWithObjectives.map,
       currentMapId,
       unlockedMapIds
     }

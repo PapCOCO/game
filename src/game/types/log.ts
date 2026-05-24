@@ -13,7 +13,8 @@ export type GameLogType =
   | "market"
   | "estate"
   | "encounter"
-  | "technique";
+  | "technique"
+  | "objective";
 
 export interface GameLogEntry {
   id: ID;

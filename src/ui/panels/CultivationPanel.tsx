@@ -13,6 +13,26 @@ function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
+function formatDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "可突破";
+  }
+
+  if (seconds < 60) {
+    return `${Math.ceil(seconds)} 秒`;
+  }
+
+  if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.ceil(seconds % 60);
+    return `${minutes} 分 ${remainingSeconds} 秒`;
+  }
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${hours} 时 ${minutes} 分`;
+}
+
 export function CultivationPanel({ save }: { save: GameSaveData }) {
   const { breakthroughNow } = useGameStore();
   const required = getCultivationRequired(save);
@@ -22,6 +42,8 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
   const breakthroughAvailable = canBreakthrough(save);
   const isMaxRealm = nextRealm === null;
   const currentCultivation = save.player.cultivation.currentCultivation;
+  const remainingCultivation = Math.max(0, required - currentCultivation);
+  const estimatedTime = isMaxRealm ? "暂未开放" : formatDuration(remainingCultivation / gainPerSecond);
 
   return (
     <section className="panel cultivation-panel">
@@ -31,7 +53,7 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
       </div>
 
       <div className="cultivation-status-row">
-        <strong>
+        <strong className={breakthroughAvailable ? "cultivation-ready" : undefined}>
           {isMaxRealm ? "已达最高境界" : breakthroughAvailable ? "可突破" : "修炼中"}
         </strong>
         <span>
@@ -54,6 +76,7 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
         />
         <StatBlock label="突破所需" value={isMaxRealm ? "未开放" : formatNumber(required)} />
         <StatBlock label="每秒修为" value={`${formatNumber(gainPerSecond)} / 秒`} />
+        <StatBlock label="预计突破" value={estimatedTime} />
       </div>
 
       <button

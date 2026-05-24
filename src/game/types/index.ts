@@ -11,3 +11,4 @@ export * from "./alchemy";
 export * from "./estate";
 export * from "./technique";
 export * from "./enhancement";
+export * from "./objective";

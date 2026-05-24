@@ -1,10 +1,11 @@
 import type { GameSaveData } from "../types";
 import { EQUIPMENT_TEMPLATES, ITEMS } from "../config";
 import { applyCultivationGain } from "./cultivation";
-import { advanceBattleTime, resolveBattleRound } from "./combat";
+import { advanceBattleTime, appendRecentCombatEvent, resolveBattleRound } from "./combat";
 import { applyLootToSave } from "./inventory";
 import { generateLoot, type LootResult } from "./loot";
 import { createId } from "./random";
+import { updateObjectives } from "./objectives";
 
 const MAX_TICK_SECONDS = 10;
 const MAX_ATTACK_EVENTS_PER_TICK = 5;
@@ -83,6 +84,7 @@ function resolveAutoBattleRounds(
   let nextSave = advanced.save;
 
   if (advanced.summary?.type === "recovered") {
+    nextSave = appendRecentCombatEvent(nextSave, "recover", advanced.summary.message, now);
     nextSave = appendLog(nextSave, "battle", advanced.summary.message, now);
   }
 
@@ -96,14 +98,20 @@ function resolveAutoBattleRounds(
       break;
     }
 
-    if (result.summary.type === "player_attack" || result.summary.type === "enemy_attack") {
-      nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
+    if (result.summary.type === "player_attack") {
+      nextSave = appendRecentCombatEvent(nextSave, "player-hit", result.summary.message, roundTime);
+    }
+
+    if (result.summary.type === "enemy_attack") {
+      nextSave = appendRecentCombatEvent(nextSave, "enemy-hit", result.summary.message, roundTime);
     }
 
     if (result.summary.type === "enemy_defeated" && result.summary.monsterId !== undefined) {
       const loot = generateLoot(result.summary.monsterId, roundTime);
       nextSave = applyLootToSave(nextSave, loot, roundTime);
+      nextSave = appendRecentCombatEvent(nextSave, "victory", result.summary.message, roundTime);
       nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
+      nextSave = appendRecentCombatEvent(nextSave, "loot", describeLoot(loot), roundTime);
       nextSave = appendLog(nextSave, "drop", describeLoot(loot), roundTime);
       nextSave = {
         ...nextSave,
@@ -123,9 +131,13 @@ function resolveAutoBattleRounds(
           defeatedCount: nextSave.autoBattle.defeatedCount + 1
         }
       };
+      nextSave = updateObjectives(nextSave, { type: "defeat", amount: 1 });
+      nextSave = updateObjectives(nextSave, { type: "collect" });
+      nextSave = updateObjectives(nextSave, { type: "cultivation" });
     }
 
     if (result.summary.type === "player_defeated") {
+      nextSave = appendRecentCombatEvent(nextSave, "recover", result.summary.message, roundTime);
       nextSave = appendLog(nextSave, "battle", result.summary.message, roundTime);
     }
   }
@@ -149,6 +161,7 @@ export function tickGame(save: GameSaveData, now = Date.now()): GameSaveData {
 
   const elapsedSeconds = Math.min(elapsedMs / 1000, MAX_TICK_SECONDS);
   const cultivatedSave = applyCultivationGain(save, elapsedSeconds, now);
+  const objectiveSave = updateObjectives(cultivatedSave, { type: "cultivation" });
 
-  return resolveAutoBattleRounds(cultivatedSave, now, save.runtime.time.lastActiveAt);
+  return resolveAutoBattleRounds(objectiveSave, now, save.runtime.time.lastActiveAt);
 }

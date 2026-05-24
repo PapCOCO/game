@@ -7,6 +7,7 @@ import type { GameLogState } from "./log";
 import type { AlchemyState, MarketState } from "./alchemy";
 import type { EstateState } from "./estate";
 import type { TechniqueState } from "./technique";
+import type { ObjectiveState } from "./objective";
 
 export interface SaveMeta {
   version: SaveVersion;
@@ -42,4 +43,5 @@ export interface GameSaveData {
   market: MarketState;
   estate: EstateState;
   techniques: TechniqueState;
+  objectives: ObjectiveState;
 }

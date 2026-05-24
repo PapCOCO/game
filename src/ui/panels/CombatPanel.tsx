@@ -1,14 +1,34 @@
 import type { GameSaveData } from "../../game/types";
 import { MONSTERS } from "../../game/config";
-import { calculateCombatPower } from "../../game/core/combat";
+import { calculateCombatPower, getActionGainPerSecond } from "../../game/core/combat";
 import { calculateFinalStats, getCurrentMap } from "../../game/core/selectors";
 import { useGameStore } from "../../game/state/gameStore";
-import { LogPanel } from "../components/LogPanel";
 import { ProgressBar } from "../components/ProgressBar";
 
 function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
+
+function formatSeconds(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "即将出手";
+  }
+
+  return `${seconds.toFixed(1)} 秒`;
+}
+
+function getTimeToAct(progress: number, gainPerSecond: number): string {
+  return formatSeconds((100 - Math.min(100, progress)) / Math.max(1, gainPerSecond));
+}
+
+const COMBAT_EVENT_LABELS: Record<string, string> = {
+  "player-hit": "玩家攻击",
+  "enemy-hit": "敌人攻击",
+  victory: "击败敌人",
+  loot: "获得掉落",
+  recover: "调息恢复",
+  system: "状态"
+};
 
 export function CombatPanel({ save }: { save: GameSaveData }) {
   const { toggleAutoBattleNow } = useGameStore();
@@ -21,10 +41,21 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
   const monster = enemy === undefined ? undefined : MONSTERS.find((item) => item.id === enemy.monsterId);
   const enemyActionProgress = Math.min(100, save.autoBattle.enemyActionProgress ?? 0);
   const recoveringUntil = save.autoBattle.recoveringUntil;
-  const isRecovering = recoveringUntil !== undefined && recoveringUntil > Date.now();
-  const combatLogs = save.logs.entries
-    .filter((log) => log.type === "battle" || log.type === "drop")
-    .slice(0, 20);
+  const now = Date.now();
+  const isRecovering = recoveringUntil !== undefined && recoveringUntil > now;
+  const playerActionGain = getActionGainPerSecond(playerStats.speed);
+  const enemyActionGain = monster === undefined ? 0 : getActionGainPerSecond(monster.stats.speed);
+  const recentEvents = save.autoBattle.recentEvents ?? [];
+  const recentDamage = recentEvents.find(
+    (event) => event.type === "player-hit" || event.type === "enemy-hit"
+  );
+  const combatStatus = !save.autoBattle.enabled
+    ? "自动历练暂停"
+    : isRecovering
+      ? "调息恢复"
+      : enemy === undefined || monster === undefined
+        ? "寻敌中"
+        : "战斗中";
 
   return (
     <section className="panel combat-panel">
@@ -45,16 +76,21 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
       <div className="combat-status-grid">
         <div className="combat-card">
           <span className="stat-label">状态</span>
-          <strong>{save.autoBattle.enabled ? "开启" : "暂停"}</strong>
+          <strong>{combatStatus}</strong>
         </div>
         <div className="combat-card">
           <span className="stat-label">地图</span>
           <strong>{currentMap?.name ?? "未知地图"}</strong>
         </div>
         <div className="combat-card">
-          <span className="stat-label">击败</span>
-          <strong>{save.autoBattle.defeatedCount}</strong>
+          <span className="stat-label">最近伤害</span>
+          <strong>{recentDamage?.message ?? "暂无交锋"}</strong>
         </div>
+      </div>
+
+      <div className="combat-state-banner">
+        <strong>{combatStatus}</strong>
+        <span>累计击败 {save.autoBattle.defeatedCount} 只怪物</span>
       </div>
 
       <div className="combat-duel">
@@ -78,6 +114,13 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
             <span>
               速 {formatNumber(playerStats.speed)} · 战力 {formatNumber(calculateCombatPower(playerStats))}
             </span>
+          </div>
+          <div className="combatant-meta">
+            <span>行动速度 {formatNumber(playerActionGain)} / 秒</span>
+            <span>预计出手 {getTimeToAct(playerActionProgress, playerActionGain)}</span>
+          </div>
+          <div className="combatant-meta">
+            <span>行动周期 {(100 / playerActionGain).toFixed(1)} 秒</span>
           </div>
         </div>
 
@@ -109,6 +152,21 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
               </>
             )}
           </div>
+          <div className="combatant-meta">
+            {monster === undefined ? (
+              <span>等待遭遇后显示速度与出手时间。</span>
+            ) : (
+              <>
+                <span>行动速度 {formatNumber(enemyActionGain)} / 秒</span>
+                <span>预计出手 {getTimeToAct(enemyActionProgress, enemyActionGain)}</span>
+              </>
+            )}
+          </div>
+          {monster !== undefined ? (
+            <div className="combatant-meta">
+              <span>行动周期 {(100 / Math.max(1, enemyActionGain)).toFixed(1)} 秒</span>
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -133,8 +191,19 @@ export function CombatPanel({ save }: { save: GameSaveData }) {
       </div>
 
       <div className="combat-log-wrap">
-        <h3>回合日志</h3>
-        <LogPanel logs={combatLogs} emptyText="尚未开始历练。" />
+        <h3>近期战况</h3>
+        <div className="combat-event-list">
+          {recentEvents.length === 0 ? (
+            <p className="muted-text">尚未开始交锋。</p>
+          ) : (
+            recentEvents.slice(0, 5).map((event) => (
+              <div className={`combat-event combat-event-${event.type}`} key={event.id}>
+                <span>{COMBAT_EVENT_LABELS[event.type] ?? event.type}</span>
+                <p>{event.message}</p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </section>
   );

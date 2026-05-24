@@ -11,6 +11,7 @@ import { InventoryPanel } from "../panels/InventoryPanel";
 import { MapPanel } from "../panels/MapPanel";
 import { MarketPanel } from "../panels/MarketPanel";
 import { EstatePanel } from "../panels/EstatePanel";
+import { ObjectivePanel } from "../panels/ObjectivePanel";
 import { EscapeMenu } from "../components/EscapeMenu";
 
 import { useAutoSave } from "../hooks/useAutoSave";
@@ -97,6 +98,7 @@ export function GameScreen() {
 
         <section className="game-column center-column" aria-label="主文本区域">
           <CombatPanel save={save} />
+          <ObjectivePanel save={save} />
         </section>
 
         <aside className="game-column right-column">

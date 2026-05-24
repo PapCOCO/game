@@ -6,7 +6,7 @@ import type {
 } from "../types";
 import { MAPS, MONSTERS } from "../config";
 import { calculateFinalStats } from "./selectors";
-import { pickWeighted, randomFloat } from "./random";
+import { createId, pickWeighted, randomFloat } from "./random";
 
 export type BattleRoundSummary = {
   type:
@@ -25,6 +25,7 @@ export type BattleRoundSummary = {
 };
 
 const RECOVERY_DURATION_MS = 5000;
+const MAX_RECENT_COMBAT_EVENTS = 8;
 
 export function calculateCombatPower(stats: CoreStats): number {
   return stats.attack * 2 + stats.defense * 1.5 + stats.maxHp * 0.2 + stats.speed * 1.2;
@@ -81,6 +82,29 @@ function getMonsterForEnemy(enemy: BattleEnemyState | undefined): MonsterDefinit
   return enemy === undefined ? undefined : MONSTERS.find((monster) => monster.id === enemy.monsterId);
 }
 
+export function appendRecentCombatEvent(
+  save: GameSaveData,
+  type: NonNullable<GameSaveData["autoBattle"]["recentEvents"]>[number]["type"],
+  message: string,
+  now = Date.now()
+): GameSaveData {
+  return {
+    ...save,
+    autoBattle: {
+      ...save.autoBattle,
+      recentEvents: [
+        {
+          id: createId("combat"),
+          type,
+          message,
+          createdAt: now
+        },
+        ...(save.autoBattle.recentEvents ?? [])
+      ].slice(0, MAX_RECENT_COMBAT_EVENTS)
+    }
+  };
+}
+
 export function ensureBattleState(save: GameSaveData, now = Date.now()): GameSaveData {
   const finalStats = calculateFinalStats(save);
   const maxPlayerHp = Math.max(1, finalStats.maxHp);
@@ -121,7 +145,8 @@ export function ensureBattleState(save: GameSaveData, now = Date.now()): GameSav
       currentEnemy: nextEnemy,
       playerCurrentHp: nextPlayerHp,
       playerActionProgress: clampProgress(save.autoBattle.playerActionProgress),
-      enemyActionProgress: clampProgress(save.autoBattle.enemyActionProgress)
+      enemyActionProgress: clampProgress(save.autoBattle.enemyActionProgress),
+      recentEvents: (save.autoBattle.recentEvents ?? []).slice(0, MAX_RECENT_COMBAT_EVENTS)
     }
   };
 }

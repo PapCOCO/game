@@ -7,6 +7,7 @@ import {
   getCurrentRealm,
   getPlayerPower
 } from "../../game/core/selectors";
+import { getCultivationGainPerSecond } from "../../game/core/cultivation";
 import { StatBlock } from "../components/StatBlock";
 
 function formatNumber(value: number): string {
@@ -78,6 +79,9 @@ export function CharacterPanel({ save }: { save: GameSaveData }) {
   const currentMap = getCurrentMap(save);
   const finalStats = calculateFinalStats(save);
   const power = getPlayerPower(save);
+  const maxHp = Math.max(1, finalStats.maxHp);
+  const currentHp = Math.min(save.autoBattle.playerCurrentHp ?? maxHp, maxHp);
+  const cultivationGain = getCultivationGainPerSecond(save);
 
   return (
     <section className="panel character-panel compact-character-panel">
@@ -101,11 +105,18 @@ export function CharacterPanel({ save }: { save: GameSaveData }) {
         <StatBlock label="灵石" value={save.player.spiritStones} />
       </div>
 
+      <div className="compact-overview-row">
+        <span title="当前地图">图 {currentMap?.name ?? save.map.currentMapId}</span>
+        <span title="当前气血">
+          血 {formatNumber(currentHp)} / {formatNumber(maxHp)}
+        </span>
+      </div>
+
       <div className="compact-stat-row">
         <span title="攻击">攻 {formatNumber(finalStats.attack)}</span>
         <span title="防御">防 {formatNumber(finalStats.defense)}</span>
-        <span title="气血">血 {formatNumber(finalStats.maxHp)}</span>
         <span title="速度">速 {formatNumber(finalStats.speed)}</span>
+        <span title="修炼速度">修 {formatNumber(cultivationGain)}/秒</span>
       </div>
 
       {isDetailOpen ? (

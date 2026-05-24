@@ -35,6 +35,21 @@ export interface BattleEnemyState {
   maxHp: number;
 }
 
+export type CombatRecentEventType =
+  | "player-hit"
+  | "enemy-hit"
+  | "victory"
+  | "loot"
+  | "recover"
+  | "system";
+
+export interface CombatRecentEvent {
+  id: ID;
+  type: CombatRecentEventType;
+  message: string;
+  createdAt: number;
+}
+
 export interface AutoBattleState {
   enabled: boolean;
   currentEnemy?: BattleEnemyState;
@@ -45,6 +60,7 @@ export interface AutoBattleState {
   recoveringUntil?: number;
   playerActionProgress?: number;
   enemyActionProgress?: number;
+  recentEvents?: CombatRecentEvent[];
 }
 
 export interface MonsterSpawnPool {

@@ -7,6 +7,7 @@ import { getUnlockedMapIds } from "./mapUnlock";
 import { calculateFinalStats } from "./selectors";
 import { createInitialEstateState } from "./estate";
 import { createInitialTechniqueState } from "./technique";
+import { createInitialObjectiveState } from "./objectives";
 
 function getFirstRealm(): RealmDefinition {
   const firstRealm = [...REALMS].sort((first, second) => first.order - second.order)[0];
@@ -87,7 +88,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
     },
     autoBattle: {
       enabled: true,
-      defeatedCount: 0
+      defeatedCount: 0,
+      recentEvents: []
     },
     logs: {
       entries: [
@@ -125,7 +127,8 @@ export function createNewGame(characterName: string, now = Date.now()): GameSave
       lastRefreshedAt: now
     },
     estate: createInitialEstateState(),
-    techniques: createInitialTechniqueState()
+    techniques: createInitialTechniqueState(),
+    objectives: createInitialObjectiveState()
   };
 
   const unlockedMapIds = getUnlockedMapIds(save);

@@ -8,18 +8,20 @@ import {
   useRef,
   useState
 } from "react";
-import type { EquipmentSlot, GameLogEntry, GameLogType, GameSaveData } from "../types";
+import type { EquipmentSlot, GameLogEntry, GameLogType, GameSaveData, Rarity } from "../types";
 import { createNewGame } from "../core/createNewGame";
 import { breakthrough } from "../core/breakthrough";
 import { tickGame } from "../core/tick";
 import { isMapUnlockedForSave } from "../core/mapUnlock";
 import { MAPS } from "../config";
 import { createId } from "../core/random";
+import { appendRecentCombatEvent } from "../core/combat";
 import {
   canEquip,
   equipItem as equipCoreItem,
   unequipItem as unequipCoreItem
 } from "../core/equipment";
+import { discardLowScoreEquipments } from "../core/equipmentCleanup";
 import { enhanceEquipment } from "../core/enhancement";
 import { loadGameSave, saveGameSave } from "../../services/saveApi";
 import { calculateOfflineReward } from "../core/offlineReward";
@@ -27,6 +29,7 @@ import { craftPill } from "../core/alchemy";
 import { searchMapEncounter } from "../core/encounter";
 import { refreshMarket, buyItem, sellItem } from "../core/market";
 import { upgradeFacility, plantField, harvestField, collectVeinCultivation, type EstateFacilityType } from "../core/estate";
+import { claimObjectiveReward, updateObjectives } from "../core/objectives";
 import type { OfflineRewardSummary } from "../types";
 
 export type GameStoreStatus = "loading" | "no-save" | "ready" | "error";
@@ -62,6 +65,11 @@ interface GameStoreValue extends GameStoreState {
   harvestEstateField: (fieldIndex: number) => Promise<void>;
   collectVeinCultivationNow: () => Promise<void>;
   enhanceEquipmentNow: (instanceId: string) => Promise<void>;
+  claimObjective: (objectiveId: string) => Promise<void>;
+  cleanupLowScoreEquipments: (options: {
+    maxScore: number;
+    keepRarityAtOrAbove?: Rarity;
+  }) => Promise<void>;
 }
 
 const GameStoreContext = createContext<GameStoreValue | null>(null);
@@ -131,10 +139,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
       if (hasOfflineReward) {
         const result = calculateOfflineReward(loadedSave, now);
-        await saveGameSave(result.save);
+        let rewardedSave = updateObjectives(result.save, { type: "cultivation" });
+        rewardedSave = updateObjectives(rewardedSave, { type: "collect" });
+        await saveGameSave(rewardedSave);
 
         setState({
-          save: result.save,
+          save: rewardedSave,
           status: "ready",
           noticeMessage: "已读取本地存档，离线收益已结算。",
           offlineReward: result.summary
@@ -244,18 +254,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const nextSave = updateObjectives(result.save, { type: "breakthrough" });
+
     setState({
-      save: result.save,
+      save: nextSave,
       status: "ready",
       noticeMessage: result.message,
       offlineReward: null
     });
 
     try {
-      await saveGameSave(result.save);
+      await saveGameSave(nextSave);
     } catch (error) {
       setState({
-        save: result.save,
+        save: nextSave,
         status: "error",
         errorMessage: error instanceof Error ? error.message : "突破后保存失败",
         noticeMessage: result.message,
@@ -311,6 +323,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             currentEnemy: undefined,
             playerActionProgress: 0,
             enemyActionProgress: 0,
+            recentEvents: [],
             lastAttackAt: now,
             battleStartedAt: state.save.autoBattle.battleStartedAt ?? now
           }
@@ -349,7 +362,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const now = Date.now();
     const willEnable = !state.save.autoBattle.enabled;
     const message = willEnable ? "自动历练已开启。" : "自动历练已暂停。";
-    const nextSave = appendSystemLog(
+    let nextSave = appendSystemLog(
       {
         ...state.save,
         meta: {
@@ -373,6 +386,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       message,
       now
     );
+    nextSave = appendRecentCombatEvent(nextSave, "system", message, now);
 
     setState({
       save: nextSave,
@@ -443,7 +457,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const nextSave = equipCoreItem(state.save, instanceId);
+      const nextSave = updateObjectives(equipCoreItem(state.save, instanceId), { type: "equip" });
 
       setState({
         save: nextSave,
@@ -597,19 +611,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
 
       const result = craftPill(state.save, recipeId);
+      const nextSave = result.success
+        ? updateObjectives(result.save, { type: "alchemy" })
+        : result.save;
 
       setState({
-        save: result.save,
+        save: nextSave,
         status: "ready",
         noticeMessage: result.message,
         offlineReward: null
       });
 
       try {
-        await saveGameSave(result.save);
+        await saveGameSave(nextSave);
       } catch (error) {
         setState({
-          save: result.save,
+          save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "炼丹后保存失败",
           noticeMessage: result.message,
@@ -645,19 +662,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
 
       const result = buyItem(state.save, marketItemId, quantity);
+      const nextSave = updateObjectives(result.save, { type: "collect" });
 
       setState({
-        save: result.save,
+        save: nextSave,
         status: "ready",
         noticeMessage: result.message,
         offlineReward: null
       });
 
       try {
-        await saveGameSave(result.save);
+        await saveGameSave(nextSave);
       } catch (error) {
         setState({
-          save: result.save,
+          save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "购买后保存失败",
           noticeMessage: result.message,
@@ -675,19 +693,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
 
       const result = sellItem(state.save, itemId, quantity);
+      const nextSave = updateObjectives(result.save, { type: "collect" });
 
       setState({
-        save: result.save,
+        save: nextSave,
         status: "ready",
         noticeMessage: result.message,
         offlineReward: null
       });
 
       try {
-        await saveGameSave(result.save);
+        await saveGameSave(nextSave);
       } catch (error) {
         setState({
-          save: result.save,
+          save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "出售后保存失败",
           noticeMessage: result.message,
@@ -752,18 +771,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const nextSave = updateObjectives(result.save, { type: "estate" });
+
       setState({
-        save: result.save,
+        save: nextSave,
         status: "ready",
         noticeMessage: result.message,
         offlineReward: null
       });
 
       try {
-        await saveGameSave(result.save);
+        await saveGameSave(nextSave);
       } catch (error) {
         setState({
-          save: result.save,
+          save: nextSave,
           status: "error",
           errorMessage: error instanceof Error ? error.message : "种植后保存失败",
           noticeMessage: result.message,
@@ -827,18 +848,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const nextSave = updateObjectives(result.save, { type: "cultivation" });
+
     setState({
-      save: result.save,
+      save: nextSave,
       status: "ready",
       noticeMessage: result.message,
       offlineReward: null
     });
 
     try {
-      await saveGameSave(result.save);
+      await saveGameSave(nextSave);
     } catch (error) {
       setState({
-        save: result.save,
+        save: nextSave,
         status: "error",
         errorMessage: error instanceof Error ? error.message : "收取修为后保存失败",
         noticeMessage: result.message,
@@ -853,6 +876,36 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
 
     const result = enhanceEquipment(state.save, instanceId);
+    const nextSave = result.success
+      ? updateObjectives(result.save, { type: "enhance", level: result.newLevel })
+      : result.save;
+
+    setState({
+      save: nextSave,
+      status: "ready",
+      noticeMessage: result.message,
+      offlineReward: null
+    });
+
+    try {
+      await saveGameSave(nextSave);
+    } catch (error) {
+      setState({
+        save: nextSave,
+        status: "error",
+        errorMessage: error instanceof Error ? error.message : "强化后保存失败",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+    }
+  }, [state]);
+
+  const claimObjective = useCallback(async (objectiveId: string) => {
+    if (state.save === null) {
+      return;
+    }
+
+    const result = claimObjectiveReward(state.save, objectiveId);
 
     setState({
       save: result.save,
@@ -867,12 +920,42 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setState({
         save: result.save,
         status: "error",
-        errorMessage: error instanceof Error ? error.message : "强化后保存失败",
+        errorMessage: error instanceof Error ? error.message : "领取目标奖励后保存失败",
         noticeMessage: result.message,
         offlineReward: null
       });
     }
   }, [state]);
+
+  const cleanupLowScoreEquipments = useCallback(
+    async (options: { maxScore: number; keepRarityAtOrAbove?: Rarity }) => {
+      if (state.save === null) {
+        return;
+      }
+
+      const result = discardLowScoreEquipments(state.save, options);
+
+      setState({
+        save: result.save,
+        status: "ready",
+        noticeMessage: result.message,
+        offlineReward: null
+      });
+
+      try {
+        await saveGameSave(result.save);
+      } catch (error) {
+        setState({
+          save: result.save,
+          status: "error",
+          errorMessage: error instanceof Error ? error.message : "清理装备后保存失败",
+          noticeMessage: result.message,
+          offlineReward: null
+        });
+      }
+    },
+    [state]
+  );
 
   const value = useMemo<GameStoreValue>(
     () => ({
@@ -898,13 +981,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       plantEstateField,
       harvestEstateField,
       collectVeinCultivationNow,
-      enhanceEquipmentNow
+      enhanceEquipmentNow,
+      claimObjective,
+      cleanupLowScoreEquipments
     }),
     [
       breakthroughNow,
       buyMarketItem,
       changeMap,
       clearError,
+      claimObjective,
+      cleanupLowScoreEquipments,
       collectVeinCultivationNow,
       craftPillNow,
       createCharacter,
