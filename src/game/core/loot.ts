@@ -1,5 +1,5 @@
 import type { EquipmentAffixInstance, EquipmentInstance, Rarity } from "../types";
-import { AFFIXES, EQUIPMENT_TEMPLATES, MONSTERS } from "../config";
+import { AFFIXES, EQUIPMENT_TEMPLATES, MAPS, MONSTERS } from "../config";
 import { createId, randomChance, randomInt } from "./random";
 
 export type LootResult = {
@@ -8,6 +8,12 @@ export type LootResult = {
   items: Array<{ itemId: string; quantity: number }>;
   equipments: EquipmentInstance[];
 };
+
+function getMapBaseSpiritStones(monsterId: string): number {
+  const map = MAPS.find((m) => m.monsterPool.some((pool) => pool.value === monsterId));
+  if (map === undefined) return 0;
+  return Math.round(map.baseSpiritStonesPerMinute / 60);
+}
 
 function rollRange(range: { min: number; max: number }): number {
   return randomInt(range.min, range.max);
@@ -97,8 +103,11 @@ export function generateLoot(monsterId: string, now = Date.now()): LootResult {
     .map((equipment) => createEquipmentInstance(equipment.equipmentId, now))
     .filter((equipment): equipment is EquipmentInstance => equipment !== null);
 
+  const mapBaseStones = getMapBaseSpiritStones(monsterId);
+  const totalSpiritStones = rollRange(monster.dropTable.spiritStones) + mapBaseStones;
+
   return {
-    spiritStones: rollRange(monster.dropTable.spiritStones),
+    spiritStones: totalSpiritStones,
     cultivation: rollRange(monster.dropTable.cultivation),
     items,
     equipments
