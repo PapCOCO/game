@@ -1613,6 +1613,90 @@ h3 {
   text-underline-offset: 3px;
 }
 
+.floating-stat-detail {
+  display: grid;
+  gap: 8px;
+  width: 260px;
+  max-width: calc(100vw - 48px);
+  padding: 10px 12px;
+  border: 1px solid #8b6b35;
+  border-radius: 4px;
+  color: #d8d0bf;
+  pointer-events: none;
+  background: #0b100d;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.floating-stat-detail-bottom::before,
+.floating-stat-detail-top::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  width: 10px;
+  height: 10px;
+  border-left: 1px solid #8b6b35;
+  border-top: 1px solid #8b6b35;
+  background: #0b100d;
+  transform: rotate(45deg);
+}
+
+.floating-stat-detail-bottom::before {
+  top: -6px;
+}
+
+.floating-stat-detail-top::before {
+  bottom: -6px;
+  transform: rotate(225deg);
+}
+
+.stat-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #303832;
+}
+
+.stat-detail-header strong {
+  color: #d2a65a;
+  font-size: 14px;
+}
+
+.stat-detail-header span {
+  color: #879084;
+  font-size: 11px;
+}
+
+.stat-detail-section {
+  display: grid;
+  gap: 4px;
+}
+
+.stat-detail-section span {
+  color: #7fb3a0;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-detail-section p {
+  margin: 0;
+  color: #c7c0ae;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.stat-block-with-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.stat-block-with-tooltip:hover {
+  border-color: #8b6b35;
+}
+
 .inventory-item-name,
 .inventory-item-meta {
   min-width: 0;

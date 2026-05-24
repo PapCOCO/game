@@ -92,6 +92,11 @@ function registerIpcHandlers(): void {
       };
     }
   });
+
+  ipcMain.handle(IPC_CHANNELS.QUIT_GAME, async () => {
+    app.quit();
+    return { ok: true };
+  });
 }
 
 app.whenReady().then(async () => {

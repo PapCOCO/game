@@ -27,6 +27,10 @@ const gameAPI = {
 
   writeSave: (saveData: unknown): Promise<WriteSaveResult> => {
     return ipcRenderer.invoke(IPC_CHANNELS.WRITE_SAVE, saveData);
+  },
+
+  quitGame: (): Promise<{ ok: boolean }> => {
+    return ipcRenderer.invoke(IPC_CHANNELS.QUIT_GAME);
   }
 };
 

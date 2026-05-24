@@ -22,6 +22,7 @@ type WriteSaveResult =
 interface GameAPI {
   loadSave: () => Promise<LoadSaveResult>;
   writeSave: (saveData: unknown) => Promise<WriteSaveResult>;
+  quitGame: () => Promise<{ ok: boolean }>;
 }
 
 interface Window {

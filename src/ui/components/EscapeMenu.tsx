@@ -16,6 +16,11 @@ interface EscapeMenuProps {
 export function EscapeMenu({ isOpen, onClose, onToggleOpen }: EscapeMenuProps) {
   const { save, saveNow, toggleAutoBattleNow } = useGameStore();
 
+  const handleQuitGame = async () => {
+    await saveNow();
+    await window.gameAPI.quitGame();
+  };
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key !== "Escape") {
@@ -131,7 +136,7 @@ export function EscapeMenu({ isOpen, onClose, onToggleOpen }: EscapeMenuProps) {
               <button className="secondary-button" disabled type="button">
                 返回标题界面
               </button>
-              <button className="secondary-button" disabled type="button">
+              <button className="secondary-button" type="button" onClick={handleQuitGame}>
                 退出游戏
               </button>
             </div>
