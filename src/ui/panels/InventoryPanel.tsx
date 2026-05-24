@@ -1,10 +1,17 @@
 import { useState } from "react";
-import type { EquipmentInstance, GameSaveData, ItemStack, ItemType } from "../../game/types";
+import type {
+  EquipmentInstance,
+  EquipmentSlot,
+  GameSaveData,
+  ItemStack,
+  ItemType
+} from "../../game/types";
 import { ITEMS } from "../../game/config";
 import { calculateEquipmentScore, formatEquipmentStats } from "../../game/core/equipment";
 import { useGameStore } from "../../game/state/gameStore";
 
 type InventoryTab = "materials" | "consumables" | "currencies" | "equipments";
+type EquipmentFilter = "all" | EquipmentSlot;
 type HoveredEntry =
   | { kind: "item"; stack: ItemStack }
   | { kind: "equipment"; equipment: EquipmentInstance }
@@ -24,6 +31,14 @@ const ITEM_TYPE_LABELS: Record<ItemType, string> = {
 };
 
 const SLOT_LABELS: Record<EquipmentInstance["slot"], string> = {
+  weapon: "武器",
+  armor: "护甲",
+  amulet: "护符",
+  ring: "戒指"
+};
+
+const EQUIPMENT_FILTER_LABELS: Record<EquipmentFilter, string> = {
+  all: "全部",
   weapon: "武器",
   armor: "护甲",
   amulet: "护符",
@@ -56,12 +71,17 @@ function getTooltipPosition(clientX: number, clientY: number) {
 export function InventoryPanel({ save }: { save: GameSaveData }) {
   const { discardEquipment, equipItemNow } = useGameStore();
   const [activeTab, setActiveTab] = useState<InventoryTab>("materials");
+  const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilter>("all");
   const [hoveredEntry, setHoveredEntry] = useState<HoveredEntry>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const equippedIds = new Set(Object.values(save.player.equipped));
   const unequippedEquipments = save.inventory.equipments.filter(
     (equipment) => !equippedIds.has(equipment.instanceId)
   );
+  const visibleEquipments =
+    equipmentFilter === "all"
+      ? unequippedEquipments
+      : unequippedEquipments.filter((equipment) => equipment.slot === equipmentFilter);
   const stacks = activeTab === "equipments" ? [] : getStacks(save, activeTab);
   const hoveredItem =
     hoveredEntry?.kind === "item" ? getItemDefinition(hoveredEntry.stack.itemId) : undefined;
@@ -100,30 +120,52 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
           <strong>{save.player.spiritStones}</strong>
         </div>
 
+        {activeTab === "equipments" ? (
+          <div className="subtab-row" role="tablist" aria-label="装备细分">
+            {(Object.keys(EQUIPMENT_FILTER_LABELS) as EquipmentFilter[]).map((filter) => (
+              <button
+                className={filter === equipmentFilter ? "subtab-button subtab-button-active" : "subtab-button"}
+                key={filter}
+                type="button"
+                onClick={() => {
+                  setEquipmentFilter(filter);
+                  setHoveredEntry(null);
+                }}
+              >
+                {EQUIPMENT_FILTER_LABELS[filter]}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         <div className="inventory-compact-list" aria-label="物品列表">
           {activeTab === "equipments" ? (
-            unequippedEquipments.length === 0 ? (
+            visibleEquipments.length === 0 ? (
               <p className="muted-text">没有未穿戴装备。</p>
             ) : (
-              unequippedEquipments.map((equipment) => (
+              visibleEquipments.map((equipment) => (
                 <div
                   className="inventory-compact-row equipment-backpack-row"
                   key={equipment.instanceId}
-                  onBlur={() => setHoveredEntry(null)}
-                  onFocus={(event) => {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
-                  }}
-                  onMouseEnter={(event) =>
-                    showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                  }
-                  onMouseLeave={() => setHoveredEntry(null)}
-                  onMouseMove={(event) =>
-                    showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
-                  }
-                  tabIndex={0}
                 >
-                  <span className="inventory-item-name">{equipment.name}</span>
+                  <span
+                    className="inventory-item-name inventory-hover-name"
+                    onBlur={() => setHoveredEntry(null)}
+                    onFocus={(event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      showTooltip({ kind: "equipment", equipment }, rect.right, rect.top);
+                    }}
+                    onMouseEnter={(event) =>
+                      showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                    }
+                    onMouseLeave={() => setHoveredEntry(null)}
+                    onMouseMove={(event) =>
+                      showTooltip({ kind: "equipment", equipment }, event.clientX, event.clientY)
+                    }
+                    tabIndex={0}
+                  >
+                    {equipment.name}
+                  </span>
                   <span className="inventory-item-meta">
                     {SLOT_LABELS[equipment.slot]} · {equipment.rarity} · {calculateEquipmentScore(equipment).toFixed(0)}
                   </span>
@@ -153,24 +195,28 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
               const item = getItemDefinition(stack.itemId);
 
               return (
-                <button
+                <div
                   className="inventory-compact-row"
                   key={stack.itemId}
-                  type="button"
-                  onBlur={() => setHoveredEntry(null)}
-                  onFocus={(event) => {
-                    const rect = event.currentTarget.getBoundingClientRect();
-                    showTooltip({ kind: "item", stack }, rect.right, rect.top);
-                  }}
-                  onMouseEnter={(event) =>
-                    showTooltip({ kind: "item", stack }, event.clientX, event.clientY)
-                  }
-                  onMouseLeave={() => setHoveredEntry(null)}
-                  onMouseMove={(event) => showTooltip({ kind: "item", stack }, event.clientX, event.clientY)}
                 >
-                  <span className="inventory-item-name">{item?.name ?? stack.itemId}</span>
+                  <span
+                    className="inventory-item-name inventory-hover-name"
+                    onBlur={() => setHoveredEntry(null)}
+                    onFocus={(event) => {
+                      const rect = event.currentTarget.getBoundingClientRect();
+                      showTooltip({ kind: "item", stack }, rect.right, rect.top);
+                    }}
+                    onMouseEnter={(event) =>
+                      showTooltip({ kind: "item", stack }, event.clientX, event.clientY)
+                    }
+                    onMouseLeave={() => setHoveredEntry(null)}
+                    onMouseMove={(event) => showTooltip({ kind: "item", stack }, event.clientX, event.clientY)}
+                    tabIndex={0}
+                  >
+                    {item?.name ?? stack.itemId}
+                  </span>
                   <span className="inventory-item-meta">{item?.rarity ?? "未知"} · x{stack.quantity}</span>
-                </button>
+                </div>
               );
             })
           )}

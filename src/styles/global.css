@@ -1528,6 +1528,31 @@ h3 {
   color: #d2a65a;
 }
 
+.subtab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #252c28;
+}
+
+.subtab-button {
+  min-height: 24px;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  padding: 0 8px;
+  color: #aeb8ac;
+  cursor: pointer;
+  background: #101512;
+}
+
+.subtab-button:hover,
+.subtab-button-active {
+  border-color: #8b6b35;
+  color: #d8d0bf;
+  background: #18170f;
+}
+
 .inventory-compact-list {
   display: grid;
   align-content: start;
@@ -1567,6 +1592,18 @@ h3 {
 .inventory-compact-row:focus-visible {
   background: #171e1a;
   outline: none;
+}
+
+.inventory-hover-name {
+  cursor: help;
+}
+
+.inventory-hover-name:hover,
+.inventory-hover-name:focus-visible {
+  color: #d2a65a;
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .inventory-item-name,
