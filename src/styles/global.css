@@ -1513,6 +1513,10 @@ h3 {
   min-height: 0;
 }
 
+.inventory-list-shell-equipment {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
 .inventory-ledger {
   display: flex;
   align-items: center;
@@ -1532,12 +1536,13 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  min-height: 32px;
   padding-bottom: 4px;
   border-bottom: 1px solid #252c28;
 }
 
 .subtab-button {
-  min-height: 24px;
+  height: 28px;
   border: 1px solid #303832;
   border-radius: 4px;
   padding: 0 8px;
@@ -1558,6 +1563,7 @@ h3 {
   align-content: start;
   gap: 2px;
   min-height: 0;
+  padding-top: 2px;
   overflow-y: auto;
 }
 
@@ -1580,7 +1586,8 @@ h3 {
 }
 
 .equipment-backpack-row {
-  grid-template-columns: minmax(0, 1fr) minmax(92px, auto) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(86px, auto) auto;
+  min-height: 32px;
 }
 
 .inventory-row-actions {

@@ -114,7 +114,13 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
         ))}
       </div>
 
-      <div className="inventory-list-shell">
+      <div
+        className={
+          activeTab === "equipments"
+            ? "inventory-list-shell inventory-list-shell-equipment"
+            : "inventory-list-shell"
+        }
+      >
         <div className="inventory-ledger">
           <span>灵石</span>
           <strong>{save.player.spiritStones}</strong>
