@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useGameStore } from "../../game/state/gameStore";
 import { getCurrentMap, getCurrentRealm, getPlayerPower } from "../../game/core/selectors";
 import { canBreakthrough } from "../../game/core/cultivation";
+import { getNextRealm } from "../../game/core/breakthrough";
 import { CharacterPanel } from "../panels/CharacterPanel";
 import { CombatPanel } from "../panels/CombatPanel";
 import { CultivationPanel } from "../panels/CultivationPanel";
@@ -27,6 +28,7 @@ export function GameScreen() {
   const currentRealm = getCurrentRealm(save);
   const currentMap = getCurrentMap(save);
   const playerPower = getPlayerPower(save);
+  const nextRealm = getNextRealm(save);
   const breakthroughReady = canBreakthrough(save);
   const toggleMenu = useCallback(() => {
     setIsMenuOpen((current) => !current);
@@ -106,7 +108,7 @@ export function GameScreen() {
             type="button"
             onClick={() => void breakthroughNow()}
           >
-            突破
+            {nextRealm === null ? "已至顶峰" : "突破"}
           </button>
           <button className="secondary-button" type="button" onClick={() => void toggleAutoBattleNow()}>
             {save.autoBattle.enabled ? "暂停历练" : "继续历练"}

@@ -21,6 +21,7 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
   const nextRealm = getNextRealm(save);
   const breakthroughAvailable = canBreakthrough(save);
   const isMaxRealm = nextRealm === null;
+  const currentCultivation = save.player.cultivation.currentCultivation;
 
   return (
     <section className="panel cultivation-panel">
@@ -34,22 +35,24 @@ export function CultivationPanel({ save }: { save: GameSaveData }) {
           {isMaxRealm ? "已达最高境界" : breakthroughAvailable ? "可突破" : "修炼中"}
         </strong>
         <span>
-          {formatNumber(save.player.cultivation.currentCultivation)} / {formatNumber(required)}
+          {isMaxRealm
+            ? `当前修为 ${formatNumber(currentCultivation)}`
+            : `${formatNumber(currentCultivation)} / ${formatNumber(required)}`}
         </span>
       </div>
 
-      <ProgressBar value={Math.min(1, progress)} />
+      <ProgressBar value={isMaxRealm ? 1 : Math.min(1, progress)} />
 
       <div className="cultivation-metrics">
         <StatBlock
-          label="还需"
+          label={isMaxRealm ? "下阶" : "还需"}
           value={
             isMaxRealm
-              ? "0"
-              : formatNumber(Math.max(0, required - save.player.cultivation.currentCultivation))
+              ? "暂未开放"
+              : formatNumber(Math.max(0, required - currentCultivation))
           }
         />
-        <StatBlock label="突破所需" value={formatNumber(required)} />
+        <StatBlock label="突破所需" value={isMaxRealm ? "未开放" : formatNumber(required)} />
         <StatBlock label="每秒修为" value={`${formatNumber(gainPerSecond)} / 秒`} />
       </div>
 
