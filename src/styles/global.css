@@ -91,6 +91,7 @@ h2 {
 
 .description,
 .panel-description {
+  margin: 12px 0 0;
   color: #b4ad9e;
   line-height: 1.75;
 }
@@ -163,6 +164,11 @@ h2 {
 
 .secondary-button:hover:not(:disabled) {
   background: rgba(245, 241, 232, 0.16);
+}
+
+.panel-action {
+  width: 100%;
+  margin-top: 16px;
 }
 
 .game-shell {
@@ -294,6 +300,26 @@ h2 {
 .map-item span {
   color: #f5f1e8;
   font-weight: 800;
+}
+
+.map-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.map-item p {
+  margin: 4px 0;
+  color: #b4ad9e;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.map-button {
+  min-height: 32px;
+  padding: 0 12px;
+  flex: 0 0 auto;
 }
 
 .map-item small {

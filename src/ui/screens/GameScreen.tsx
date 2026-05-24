@@ -3,11 +3,15 @@ import { useGameStore } from "../../game/state/gameStore";
 import { CharacterPanel } from "../panels/CharacterPanel";
 import { CultivationPanel } from "../panels/CultivationPanel";
 import { MapPanel } from "../panels/MapPanel";
+import { useAutoSave } from "../hooks/useAutoSave";
+import { useGameLoop } from "../hooks/useGameLoop";
 
 export function GameScreen() {
-  const { save, saveNow } = useGameStore();
-  const [saveMessage, setSaveMessage] = useState("");
+  const { noticeMessage, save, saveNow } = useGameStore();
   const [isSaving, setIsSaving] = useState(false);
+
+  useGameLoop();
+  useAutoSave();
 
   if (save === null) {
     return null;
@@ -15,13 +19,11 @@ export function GameScreen() {
 
   async function handleSaveNow() {
     setIsSaving(true);
-    setSaveMessage("");
 
     try {
       await saveNow();
-      setSaveMessage("已保存。");
     } catch {
-      setSaveMessage("保存失败。");
+      // saveNow reports errors through the shared game store.
     } finally {
       setIsSaving(false);
     }
@@ -36,7 +38,7 @@ export function GameScreen() {
         </div>
 
         <div className="save-controls">
-          {saveMessage !== "" ? <span>{saveMessage}</span> : null}
+          {noticeMessage !== undefined ? <span>{noticeMessage}</span> : null}
           <button className="secondary-button" disabled={isSaving} type="button" onClick={handleSaveNow}>
             {isSaving ? "保存中..." : "手动保存"}
           </button>

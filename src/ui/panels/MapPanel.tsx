@@ -1,7 +1,9 @@
 import type { GameSaveData } from "../../game/types";
 import { getCurrentMap, getUnlockedMaps } from "../../game/core/selectors";
+import { useGameStore } from "../../game/state/gameStore";
 
 export function MapPanel({ save }: { save: GameSaveData }) {
+  const { changeMap } = useGameStore();
   const currentMap = getCurrentMap(save);
   const unlockedMaps = getUnlockedMaps(save);
 
@@ -22,7 +24,18 @@ export function MapPanel({ save }: { save: GameSaveData }) {
             className={map.id === save.map.currentMapId ? "map-item map-item-current" : "map-item"}
             key={map.id}
           >
-            <span>{map.name}</span>
+            <div className="map-item-header">
+              <span>{map.name}</span>
+              <button
+                className="secondary-button map-button"
+                disabled={map.id === save.map.currentMapId}
+                type="button"
+                onClick={() => void changeMap(map.id)}
+              >
+                {map.id === save.map.currentMapId ? "当前" : "前往"}
+              </button>
+            </div>
+            <p>{map.description}</p>
             <small>
               修为 {map.baseCultivationPerSecond}/秒 · 灵石 {map.baseSpiritStonesPerMinute}/分
             </small>
