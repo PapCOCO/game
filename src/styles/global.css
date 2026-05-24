@@ -320,6 +320,18 @@ h3 {
   background: #121714;
 }
 
+.panel > .panel-heading {
+  flex: 0 0 auto;
+}
+
+.panel > .equipped-lines-only,
+.panel > .inventory-list-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: #566158 #0d1110;
+}
+
 .compact-character-panel,
 .cultivation-panel {
   overflow: hidden;
@@ -1514,8 +1526,20 @@ h3 {
   gap: 10px;
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  scrollbar-color: #566158 #0d1110;
+  overflow: hidden;
+}
+
+.right-panel-content > .equipment-panel {
+  flex: 0 0 auto;
+  max-height: 35%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.right-panel-content > .inventory-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .alchemy-market-panel {
