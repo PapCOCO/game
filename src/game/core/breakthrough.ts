@@ -1,6 +1,6 @@
 import type { GameLogEntry, GameSaveData, RealmDefinition } from "../types";
 import { MAPS, REALMS } from "../config";
-import { createId } from "./random";
+import { createId, randomChance } from "./random";
 import { getUnlockedMapIdsByRealm } from "./mapUnlock";
 import { calculateFinalStats, getCultivationRequired, getCurrentRealm } from "./selectors";
 
@@ -64,12 +64,54 @@ export function breakthrough(
     };
   }
 
+  const roll = randomChance(currentRealm.breakthroughRate);
+
+  if (!roll) {
+    const failedSave: GameSaveData = {
+      ...save,
+      player: {
+        ...save.player,
+        cultivation: {
+          ...save.player.cultivation,
+          currentCultivation: Math.max(0, save.player.cultivation.currentCultivation - requiredCultivation * 0.3),
+          breakthroughAttempts: save.player.cultivation.breakthroughAttempts + 1,
+          lastBreakthroughAt: now
+        }
+      },
+      logs: {
+        ...save.logs,
+        entries: appendLog(save, {
+          id: createId("log"),
+          type: "breakthrough",
+          message: `突破失败，修为受损。当前成功率：${(currentRealm.breakthroughRate * 100).toFixed(0)}%。`,
+          createdAt: now
+        })
+      },
+      runtime: {
+        ...save.runtime,
+        time: {
+          ...save.runtime.time,
+          updatedAt: now,
+          lastActiveAt: now
+        }
+      }
+    };
+
+    return {
+      save: failedSave,
+      success: false,
+      message: `突破失败，修为受损。当前成功率：${(currentRealm.breakthroughRate * 100).toFixed(0)}%。`
+    };
+  }
+
   const unlockedMapIds = getUnlockedMapIdsByRealm(nextRealm.id);
   const currentMapId = unlockedMapIds.includes(save.map.currentMapId)
     ? save.map.currentMapId
     : getFirstUnlockedMapId(unlockedMapIds);
   const cultivationAfterBreakthrough =
     save.player.cultivation.currentCultivation - requiredCultivation;
+
+  const nextLevel = save.player.level + 1;
 
   const nextSave: GameSaveData = {
     ...save,
@@ -80,6 +122,7 @@ export function breakthrough(
     player: {
       ...save.player,
       realmId: nextRealm.id,
+      level: nextLevel,
       cultivation: {
         ...save.player.cultivation,
         currentCultivation: cultivationAfterBreakthrough,
@@ -88,6 +131,7 @@ export function breakthrough(
       },
       progress: {
         ...save.player.progress,
+        level: nextLevel,
         realmId: nextRealm.id,
         unlockedMapIds,
         currentMapId
