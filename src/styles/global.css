@@ -49,8 +49,8 @@ button:disabled {
 
 .app-shell {
   width: 100%;
-  height: 100vh;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   padding: 10px;
   overflow: hidden;
   background: #0d1110;
@@ -282,9 +282,11 @@ h3 {
 
 .game-main {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(248px, 280px) minmax(360px, 1fr) minmax(420px, 520px);
+  grid-template-areas: "left center right";
   gap: 8px;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -297,14 +299,17 @@ h3 {
 }
 
 .left-column {
+  grid-area: left;
   grid-template-rows: 162px 172px minmax(0, 1fr);
 }
 
 .center-column {
+  grid-area: center;
   grid-template-rows: minmax(0, 1fr) 240px;
 }
 
 .right-column {
+  grid-area: right;
   grid-template-rows: minmax(0, 1fr);
 }
 
@@ -1226,61 +1231,126 @@ h3 {
   min-width: 0;
 }
 
-.equipped-lines {
-  display: grid;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.equipped-lines-only {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  scrollbar-color: #566158 #0d1110;
-}
-
-.equipped-slot-card {
-  padding: 6px;
-  border-bottom: 1px solid #252c28;
-}
-
-.equipped-slot-card p {
-  margin: 4px 0 0;
-  color: #9da697;
-  font-size: 11px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.equipped-slot-summary {
-  display: grid;
-  gap: 2px;
-}
-
-.equipped-slot-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
 .equipped-line {
+  width: 100%;
+  min-width: 0;
+  min-height: 28px;
+  border: 0;
+  border-bottom: 1px solid #252c28;
+  border-radius: 0;
+  padding: 3px 4px;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 34px;
+  grid-template-columns: 38px minmax(86px, 1fr) minmax(0, 1.25fr) 44px 30px;
   align-items: center;
   gap: 6px;
   color: #c7c0ae;
   font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  background: transparent;
+}
+
+.equipped-line:hover,
+.equipped-line:focus-visible,
+.equipped-line-selected {
+  background: #171e1a;
+  outline: none;
 }
 
 .equipped-line span {
   color: #879084;
 }
 
-.equipped-line strong {
+.equipped-line strong,
+.equipped-line em,
+.equipped-line small {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.equipped-line em {
+  color: #c7c0ae;
+  font-style: normal;
+}
+
+.equipped-line small {
+  color: #879084;
+  font-size: 11px;
+}
+
+.equipped-line .text-button {
+  min-height: 22px;
+  padding: 0 5px;
+}
+
+.equipped-lines {
+  display: grid;
+  gap: 2px;
+  margin-top: 0;
+}
+
+.equipped-lines-only {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.equipped-detail {
+  display: grid;
+  gap: 5px;
+  min-height: 0;
+  max-height: 132px;
+  margin-top: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid #303832;
+  border-radius: 4px;
+  background: #0f1512;
+  scrollbar-color: #566158 #0d1110;
+}
+
+.equipped-detail-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.equipped-detail-header strong,
+.equipped-detail-header span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equipped-detail-header strong {
+  color: #d2a65a;
+  font-size: 13px;
+}
+
+.equipped-detail-header span,
+.equipped-detail p {
+  margin: 0;
+  color: #c7c0ae;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.equipped-detail-header span {
+  color: #879084;
+  font-size: 11px;
+}
+
+.equipped-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .equipped-name-button {
@@ -1433,7 +1503,12 @@ h3 {
 }
 
 .inventory-list-shell-equipment {
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(368px, 1fr);
+}
+
+.panel > .inventory-list-shell-equipment {
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .inventory-ledger {
@@ -1513,6 +1588,18 @@ h3 {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 8px;
   min-height: 0;
+}
+
+.inventory-browser-equipment {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(140px, 1fr) minmax(220px, auto);
+}
+
+@container inventory-panel (min-width: 560px) {
+  .inventory-browser-equipment {
+    grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.1fr);
+    grid-template-rows: minmax(0, 1fr);
+  }
 }
 
 .inventory-compact-list {
@@ -1674,6 +1761,21 @@ h3 {
   scrollbar-color: #566158 #0d1110;
 }
 
+.inventory-detail-card-equipment {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.inventory-detail-card-equipment .inventory-detail-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-color: #566158 #0d1110;
+}
+
 .inventory-detail-empty {
   display: flex;
   align-items: center;
@@ -1799,41 +1901,13 @@ h3 {
   white-space: nowrap;
 }
 
-@media (max-width: 960px) {
-  .app-shell {
-    padding: 12px;
-  }
-
-  .game-topbar,
-  .game-main,
-  .action-bar {
-    grid-template-columns: 1fr;
-  }
-
-  .topbar-meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .action-buttons {
-    flex-wrap: wrap;
-  }
-
-  .summary-row,
-  .stat-grid {
-    grid-template-columns: 1fr;
-  }
-
-  h1 {
-    font-size: 30px;
-  }
-}
-
 .right-column-inner {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -1858,20 +1932,64 @@ h3 {
   gap: 10px;
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.equipment-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.equipment-workspace-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+.equipment-workspace-tabs .tab-button {
+  min-height: 30px;
+}
+
+.equipment-workspace-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
 .right-panel-content > .equipment-panel {
   flex: 0 0 auto;
-  max-height: 34%;
+  max-height: none;
   min-height: 0;
   overflow: hidden;
 }
 
-.right-panel-content > .inventory-panel {
+.right-panel-content > .inventory-panel,
+.equipment-workspace-body > .inventory-panel {
+  container: inventory-panel / inline-size;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+.equipment-workspace-body > .equipment-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.equipment-workspace-body > .equipment-panel .equipped-detail {
+  flex: 1 1 auto;
+  max-height: none;
 }
 
 .right-panel-content > .market-panel,
@@ -1879,6 +1997,141 @@ h3 {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .game-shell {
+    grid-template-rows: auto auto auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .game-topbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .game-main {
+    grid-template-columns: minmax(250px, 0.42fr) minmax(0, 1fr);
+    grid-template-areas:
+      "left center"
+      "right right";
+    align-items: stretch;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .left-column,
+  .center-column,
+  .right-column {
+    min-height: 520px;
+  }
+
+  .right-column {
+    grid-template-rows: minmax(0, 560px);
+  }
+
+  .right-panel-content {
+    overflow: hidden;
+  }
+
+  .action-bar {
+    position: sticky;
+    bottom: 10px;
+    z-index: 20;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 8px;
+  }
+
+  .game-topbar,
+  .action-bar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .game-main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "left"
+      "center"
+      "right";
+  }
+
+  .left-column,
+  .center-column,
+  .right-column {
+    min-height: auto;
+  }
+
+  .left-column {
+    grid-template-rows: auto auto minmax(280px, 48vh);
+  }
+
+  .center-column {
+    grid-template-rows: minmax(420px, 62vh) minmax(240px, 34vh);
+  }
+
+  .right-column {
+    grid-template-rows: minmax(460px, 76vh);
+  }
+
+  .inventory-browser-equipment {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(160px, 1fr) minmax(220px, auto);
+  }
+
+  .topbar-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+
+  .action-bar p {
+    white-space: normal;
+  }
+
+  .summary-row,
+  .stat-grid,
+  .cultivation-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .combat-duel,
+  .compact-monster-pool {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .equipped-line {
+    grid-template-columns: 34px minmax(0, 1fr) 32px;
+  }
+
+  .equipped-line em,
+  .equipped-line small {
+    display: none;
+  }
+
+  .inventory-sort-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inventory-sort-row select {
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
 }
 
 .alchemy-market-panel {

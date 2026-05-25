@@ -136,7 +136,7 @@ function EquipmentDetail({
   const canEnhanceThis = canEnhance(save, equipment.instanceId);
 
   return (
-    <div className="inventory-detail-card">
+    <div className="inventory-detail-card inventory-detail-card-equipment">
       <div className="inventory-detail-header">
         <strong>
           {equipment.name}
@@ -192,7 +192,7 @@ function ItemDetail({ stack }: { stack: ItemStack }) {
   const item = getItemDefinition(stack.itemId);
 
   return (
-    <div className="inventory-detail-card">
+    <div className="inventory-detail-card inventory-detail-card-item">
       <div className="inventory-detail-header">
         <strong>{item?.name ?? stack.itemId}</strong>
         <span>
@@ -359,7 +359,13 @@ export function InventoryPanel({ save }: { save: GameSaveData }) {
           </div>
         ) : null}
 
-        <div className="inventory-browser">
+        <div
+          className={
+            activeTab === "equipments"
+              ? "inventory-browser inventory-browser-equipment"
+              : "inventory-browser"
+          }
+        >
           <div className="inventory-compact-list" aria-label="物品列表">
             {activeTab === "equipments" ? (
               visibleEquipments.length === 0 ? (

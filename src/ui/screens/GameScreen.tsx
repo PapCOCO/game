@@ -18,12 +18,15 @@ import { useAutoSave } from "../hooks/useAutoSave";
 import { useGameLoop } from "../hooks/useGameLoop";
 
 type RightPanelTab = "inventory" | "market" | "estate";
+type EquipmentWorkspaceTab = "equipped" | "bag";
 
 export function GameScreen() {
   const { breakthroughNow, noticeMessage, save, saveNow, toggleAutoBattleNow } = useGameStore();
   const [isSaving, setIsSaving] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [rightTab, setRightTab] = useState<RightPanelTab>("inventory");
+  const [equipmentWorkspaceTab, setEquipmentWorkspaceTab] =
+    useState<EquipmentWorkspaceTab>("bag");
 
   useGameLoop();
   useAutoSave();
@@ -129,10 +132,39 @@ export function GameScreen() {
             </div>
             <div className="right-panel-content">
               {rightTab === "inventory" ? (
-                <>
-                  <EquipmentPanel save={save} />
-                  <InventoryPanel save={save} />
-                </>
+                <div className="equipment-workspace">
+                  <div className="equipment-workspace-tabs" role="tablist" aria-label="装备行囊视图">
+                    <button
+                      className={
+                        equipmentWorkspaceTab === "bag"
+                          ? "tab-button tab-button-active"
+                          : "tab-button"
+                      }
+                      type="button"
+                      onClick={() => setEquipmentWorkspaceTab("bag")}
+                    >
+                      行囊
+                    </button>
+                    <button
+                      className={
+                        equipmentWorkspaceTab === "equipped"
+                          ? "tab-button tab-button-active"
+                          : "tab-button"
+                      }
+                      type="button"
+                      onClick={() => setEquipmentWorkspaceTab("equipped")}
+                    >
+                      当前穿戴
+                    </button>
+                  </div>
+                  <div className="equipment-workspace-body">
+                    {equipmentWorkspaceTab === "bag" ? (
+                      <InventoryPanel save={save} />
+                    ) : (
+                      <EquipmentPanel save={save} />
+                    )}
+                  </div>
+                </div>
               ) : rightTab === "market" ? (
                 <MarketPanel save={save} />
               ) : (
